@@ -2889,7 +2889,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') _handleAuthSubmit();
   });
   document.getElementById('btn-logout').addEventListener('click', () => {
-    showConfirm('ログアウト', 'ログアウトしますか？', handleLogout);
+    showConfirm('ログアウト', 'ログアウトしますか？', handleLogout, { okLabel: 'ログアウト' });
   });
 
   sb.auth.onAuthStateChange((event, session) => {
