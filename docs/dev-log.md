@@ -290,3 +290,30 @@ records を先に DELETE → sessions を DELETE の順で実装。
 ### 次のステップ（Phase 3-C）
 
 「Phase 3-C を進めて」で設定系 CRUD（種目・メニュー・怪我部位）の実装を行う。
+
+---
+
+## 2026-06-28 — Phase 3-C: 設定系 CRUD 実装（ステップ 12〜14）
+
+### 作業内容
+
+設定タブの全 CRUD 操作の GAS API を Supabase に置き換えた。これで `gasPost` の呼び出しがコードから完全になくなった。
+
+**変更ファイル:**
+- `app.js`: 以下の変更
+  - `saveExModal()` — exercises テーブルへの update/insert に置き換え。名前変更時は records・menu_exercises も update
+  - `deleteExModal()` — exercises テーブルへの delete に置き換え
+  - `saveMenuOrder()` — menu_id を select で取得 → menu_exercises を delete + insert（全件洗い替え）
+  - `removeMenuEx()` — menu_id を select で取得 → menu_exercises から対象行を delete
+  - `openMenuExAdd()` 内クリックハンドラ — menu_id を select で取得 → 最大 order_num を取得 → menu_exercises に insert
+  - `addMenuModal()` — menus テーブルへの insert に置き換え
+  - `deleteMenuConfirm()` — menus テーブルへの delete に置き換え（menu_exercises は CASCADE で自動削除）
+  - `saveInjuryModal()` — injury_sites テーブルへの update/insert に置き換え
+  - `deleteInjuryModal()` — injury_sites テーブルへの delete に置き換え
+- `index.html`: `app.js?v=6` に更新
+- `sw.js`: `workoutlog3-v6` に更新
+
+### Phase 3 完了
+
+Phase 3-A〜C が完了し、GAS API (gasGet/gasPost) をすべて Supabase クライアントに置き換えた。
+次は Phase 4（データ移行）または動作確認。

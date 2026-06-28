@@ -2470,16 +2470,24 @@ async function saveExModal() {
   const rawInterval = parseInt(document.getElementById('modal-ex-interval').value);
   const defaultInterval = isNaN(rawInterval) ? 90 : rawInterval;
 
-  const body = { name, unit, hasSides, bodyPart, defaultInterval };
   if (S.editingExName) {
-    body.action = 'updateExercise';
-    body.oldName = S.editingExName;
-    await gasPost(body);
+    const { error } = await sb.from('exercises')
+      .update({ name, unit, has_sides: hasSides, body_part: bodyPart, default_interval: defaultInterval })
+      .eq('user_id', _userId).eq('name', S.editingExName);
+    if (error) { showToast('保存に失敗しました'); return; }
+    if (S.editingExName !== name) {
+      await sb.from('records').update({ exercise: name }).eq('user_id', _userId).eq('exercise', S.editingExName);
+      await sb.from('menu_exercises').update({ exercise_name: name }).eq('user_id', _userId).eq('exercise_name', S.editingExName);
+    }
     const idx = S.exercises.findIndex(e => e.name === S.editingExName);
-    if (idx !== -1) S.exercises[idx] = { ...S.exercises[idx], ...body };
+    if (idx !== -1) S.exercises[idx] = { ...S.exercises[idx], name, unit, hasSides, bodyPart, defaultInterval };
   } else {
-    body.action = 'addExercise';
-    await gasPost(body);
+    const { error } = await sb.from('exercises').insert({
+      user_id: _userId, name, unit, has_sides: hasSides,
+      body_part: bodyPart, default_interval: defaultInterval,
+      main_equipment: '', sub_equipment: '',
+    });
+    if (error) { showToast('保存に失敗しました'); return; }
     S.exercises.push({ name, unit, hasSides, bodyPart, defaultInterval, mainEquipment: '', subEquipment: '' });
   }
   closeModal('modal-ex');
@@ -2490,7 +2498,8 @@ async function saveExModal() {
 
 function deleteExModal() {
   showConfirm('種目を削除', `「${S.editingExName}」を削除しますか？`, async () => {
-    await gasPost({ action: 'deleteExercise', name: S.editingExName });
+    const { error } = await sb.from('exercises').delete().eq('user_id', _userId).eq('name', S.editingExName);
+    if (error) { showToast('削除に失敗しました'); return; }
     S.exercises = S.exercises.filter(e => e.name !== S.editingExName);
     closeModal('modal-ex');
     renderSettingsEx();
@@ -2551,14 +2560,19 @@ async function saveMenuOrder() {
   const rows = document.querySelectorAll('#s-menu-detail-list .wa-setting-row');
   const exercises = Array.from(rows).map(r => r.dataset.name);
   menu.exercises = exercises;
-  await gasPost({ action: 'reorderMenuExercises', menu: S.currentMenu, exercises });
+  const { data: menuData } = await sb.from('menus').select('id').eq('user_id', _userId).eq('name', S.currentMenu).single();
+  await sb.from('menu_exercises').delete().eq('user_id', _userId).eq('menu_id', menuData.id);
+  await sb.from('menu_exercises').insert(exercises.map((ex, idx) => ({
+    user_id: _userId, menu_id: menuData.id, exercise_name: ex, order_num: idx + 1,
+  })));
 }
 
 async function removeMenuEx(exName) {
   const menu = S.menus.find(m => m.name === S.currentMenu);
   if (!menu) return;
   menu.exercises = menu.exercises.filter(e => e !== exName);
-  await gasPost({ action: 'removeMenuExercise', menu: S.currentMenu, exercise: exName });
+  const { data: menuData } = await sb.from('menus').select('id').eq('user_id', _userId).eq('name', S.currentMenu).single();
+  await sb.from('menu_exercises').delete().eq('user_id', _userId).eq('menu_id', menuData.id).eq('exercise_name', exName);
   renderMenuDetailList();
 }
 
@@ -2573,7 +2587,10 @@ function openMenuExAdd() {
     el.addEventListener('click', async () => {
       const exName = el.dataset.name;
       menu.exercises.push(exName);
-      await gasPost({ action: 'addMenuExercise', menu: S.currentMenu, exercise: exName });
+      const { data: menuData } = await sb.from('menus').select('id').eq('user_id', _userId).eq('name', S.currentMenu).single();
+      const { data: existing } = await sb.from('menu_exercises').select('order_num').eq('user_id', _userId).eq('menu_id', menuData.id);
+      const maxOrder = existing && existing.length > 0 ? Math.max(...existing.map(e => e.order_num)) : 0;
+      await sb.from('menu_exercises').insert({ user_id: _userId, menu_id: menuData.id, exercise_name: exName, order_num: maxOrder + 1 });
       closeModal('modal-menu-ex-add');
       renderMenuDetailList();
     });
@@ -2591,7 +2608,8 @@ function openMenuExAdd() {
 async function addMenuModal() {
   const name = document.getElementById('modal-menu-name').value.trim();
   if (!name) { showToast('メニュー名を入力してください'); return; }
-  await gasPost({ action: 'addMenu', name });
+  const { error } = await sb.from('menus').insert({ user_id: _userId, name });
+  if (error) { showToast('保存に失敗しました'); return; }
   S.menus.push({ name, exercises: [] });
   closeModal('modal-menu-add');
   renderSettingsMenu();
@@ -2601,7 +2619,8 @@ async function addMenuModal() {
 
 function deleteMenuConfirm() {
   showConfirm('メニューを削除', `「${menuDisplay(S.currentMenu)}」を削除しますか？`, async () => {
-    await gasPost({ action: 'deleteMenu', name: S.currentMenu });
+    const { error } = await sb.from('menus').delete().eq('user_id', _userId).eq('name', S.currentMenu);
+    if (error) { showToast('削除に失敗しました'); return; }
     S.menus = S.menus.filter(m => m.name !== S.currentMenu);
     showSettingsScreen('s-menu');
     renderSettingsMenu();
@@ -2635,11 +2654,13 @@ async function saveInjuryModal() {
   const name = document.getElementById('modal-injury-name').value.trim();
   if (!name) { showToast('部位名を入力してください'); return; }
   if (S.editingInjuryOld) {
-    await gasPost({ action: 'updateInjurySite', oldName: S.editingInjuryOld, newName: name });
+    const { error } = await sb.from('injury_sites').update({ name }).eq('user_id', _userId).eq('name', S.editingInjuryOld);
+    if (error) { showToast('保存に失敗しました'); return; }
     const idx = S.injurySites.indexOf(S.editingInjuryOld);
     if (idx !== -1) S.injurySites[idx] = name;
   } else {
-    await gasPost({ action: 'addInjurySite', name });
+    const { error } = await sb.from('injury_sites').insert({ user_id: _userId, name });
+    if (error) { showToast('保存に失敗しました'); return; }
     S.injurySites.push(name);
   }
   closeModal('modal-injury');
@@ -2650,7 +2671,8 @@ async function saveInjuryModal() {
 
 function deleteInjuryModal() {
   showConfirm('部位を削除', `「${S.editingInjuryOld}」を削除しますか？`, async () => {
-    await gasPost({ action: 'deleteInjurySite', name: S.editingInjuryOld });
+    const { error } = await sb.from('injury_sites').delete().eq('user_id', _userId).eq('name', S.editingInjuryOld);
+    if (error) { showToast('削除に失敗しました'); return; }
     S.injurySites = S.injurySites.filter(s => s !== S.editingInjuryOld);
     closeModal('modal-injury');
     renderSettingsInjury();
