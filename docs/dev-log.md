@@ -62,9 +62,28 @@ migration-plan.md に Phase 1（Supabase セットアップ）の詳細手順を
 
 ---
 
-### 次のステップ（Phase 1）
+---
 
-1. Supabase でプロジェクト作成
-2. `CLAUDE.md` 内のSQLを実行してテーブル作成
-3. Supabase JS SDK を index.html に追加
-4. `SUPABASE_URL` と `SUPABASE_ANON_KEY` を app.js に設定
+## 2026-06-28 — Phase 1: Supabase セットアップ完了
+
+### 作業内容
+
+**ユーザーが Supabase ダッシュボードで実施:**
+- プロジェクト `workoutlog3` 作成（リージョン: Tokyo）
+- テーブル6種 + インデックス6件を SQL Editor で作成
+- API キー取得（新形式 `sb_publishable_` の Publishable key）
+
+**コード変更:**
+- `index.html`: Supabase JS SDK（@2系）CDN を追加、`app.js?v=2` にキャッシュバスター更新
+- `app.js`: `SUPABASE_URL` / `SUPABASE_ANON_KEY` 定数を先頭に追加（GAS_URL は Phase 3 削除予定）
+- `sw.js`: キャッシュ名を `workoutlog3-v2` に更新
+
+**Supabase プロジェクト情報:**
+- URL: `https://bygocxazrbkydrqtbsrf.supabase.co`
+- Publishable key: `sb_publishable_xYuWtGjhulxA4_vP00OqfA__3NedqRC`
+
+### 次のステップ（Phase 2）
+
+1. `index.html` にログイン画面を追加
+2. Supabase Auth でサインイン/サインアップ処理を実装
+3. セッション管理（自動ログイン）

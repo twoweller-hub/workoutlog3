@@ -1,5 +1,7 @@
 'use strict';
 
+const SUPABASE_URL     = 'https://bygocxazrbkydrqtbsrf.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_xYuWtGjhulxA4_vP00OqfA__3NedqRC';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzfXMbAScXVYktNKv44qVu7tdQgjMoDFeRdx4zcJ7AZy6q47zl9VxRadfg6oSj4pzoH9Q/exec';
 
 // =====================================================================
