@@ -1422,6 +1422,7 @@ async function completeEx() {
     }));
     const { error } = await sb.from('records').insert(rows);
     if (error) { showToast('記録の保存に失敗しました'); console.error(error); }
+    S.injuryRecords = null;
   }
 
   if (exMaster && targetInterval !== exMaster.defaultInterval) {
