@@ -4,6 +4,8 @@ const SUPABASE_URL     = 'https://bygocxazrbkydrqtbsrf.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_xYuWtGjhulxA4_vP00OqfA__3NedqRC';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzfXMbAScXVYktNKv44qVu7tdQgjMoDFeRdx4zcJ7AZy6q47zl9VxRadfg6oSj4pzoH9Q/exec';
 
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // =====================================================================
 //  STATE
 // =====================================================================
@@ -175,12 +177,87 @@ function showConfirm(title, msg, cb, opts = {}) {
 // =====================================================================
 //  INIT
 // =====================================================================
+// =====================================================================
+//  AUTH
+// =====================================================================
+
+let _authMode = 'login';
+let _appSetupDone = false;
+
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function hideLoginScreen() {
+  document.getElementById('login-screen').style.display = 'none';
+}
+
+function _setLoginError(msg) {
+  document.getElementById('login-error').textContent = msg;
+}
+
+function _toggleAuthMode() {
+  _authMode = _authMode === 'login' ? 'signup' : 'login';
+  const isSignup = _authMode === 'signup';
+  document.getElementById('login-title').textContent = isSignup ? '新規登録' : 'ログイン';
+  document.getElementById('login-submit-btn').textContent = isSignup ? 'アカウントを作成' : 'ログイン';
+  document.getElementById('login-switch-btn').textContent = isSignup ? 'ログインに戻る' : 'アカウントを作成する';
+  _setLoginError('');
+}
+
+async function _handleAuthSubmit() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  _setLoginError('');
+  if (!email || !password) { _setLoginError('メールアドレスとパスワードを入力してください'); return; }
+
+  const btn = document.getElementById('login-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '処理中...';
+
+  let error;
+  if (_authMode === 'login') {
+    ({ error } = await sb.auth.signInWithPassword({ email, password }));
+  } else {
+    ({ error } = await sb.auth.signUp({ email, password }));
+  }
+
+  btn.disabled = false;
+  btn.textContent = _authMode === 'login' ? 'ログイン' : 'アカウントを作成';
+
+  if (error) { _setLoginError(_authErrMsg(error)); return; }
+
+  if (_authMode === 'signup') {
+    document.getElementById('login-title').textContent = '確認メールを送信しました';
+    document.getElementById('login-submit-btn').style.display = 'none';
+    document.getElementById('login-switch-btn').style.display = 'none';
+    const errEl = document.getElementById('login-error');
+    errEl.style.color = '#d4f53c';
+    errEl.textContent = 'メールのリンクをクリックして登録を完了してください';
+  }
+}
+
+function _authErrMsg(error) {
+  const m = error.message || '';
+  if (m.includes('Invalid login credentials')) return 'メールアドレスまたはパスワードが違います';
+  if (m.includes('Email not confirmed')) return 'メールアドレスの確認が完了していません';
+  if (m.includes('User already registered')) return 'このメールアドレスはすでに登録されています';
+  return m;
+}
+
+async function handleLogout() {
+  await sb.auth.signOut();
+}
+
 async function init() {
-  document.getElementById('s1-date').textContent = todayDisplay();
-  document.getElementById('s2-date').textContent = todayDisplay();
-  setupNav();
-  setupEventListeners();
-  showTab('record');
+  if (!_appSetupDone) {
+    document.getElementById('s1-date').textContent = todayDisplay();
+    document.getElementById('s2-date').textContent = todayDisplay();
+    setupNav();
+    setupEventListeners();
+    showTab('record');
+    _appSetupDone = true;
+  }
 
   try {
     const data = await gasGet({ action: 'getInitialData' });
@@ -2354,4 +2431,24 @@ function setupEventListeners() {
 // =====================================================================
 //  START
 // =====================================================================
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('login-submit-btn').addEventListener('click', _handleAuthSubmit);
+  document.getElementById('login-switch-btn').addEventListener('click', _toggleAuthMode);
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') _handleAuthSubmit();
+  });
+  document.getElementById('btn-logout').addEventListener('click', () => {
+    showConfirm('ログアウト', 'ログアウトしますか？', handleLogout);
+  });
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'INITIAL_SESSION') {
+      if (session) { hideLoginScreen(); init(); }
+    } else if (event === 'SIGNED_IN') {
+      hideLoginScreen(); init();
+    } else if (event === 'SIGNED_OUT') {
+      _appSetupDone = false;
+      showLoginScreen();
+    }
+  });
+});

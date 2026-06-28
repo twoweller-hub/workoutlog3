@@ -87,3 +87,35 @@ migration-plan.md に Phase 1（Supabase セットアップ）の詳細手順を
 1. `index.html` にログイン画面を追加
 2. Supabase Auth でサインイン/サインアップ処理を実装
 3. セッション管理（自動ログイン）
+
+---
+
+## 2026-06-28 — Phase 2: 認証フロー実装
+
+### 作業内容
+
+**index.html:**
+- ログイン画面（`#login-screen`）を `<body>` 直後に追加（メール・パスワード入力、ログイン/新規登録切り替え）
+- 設定タブにログアウトボタン（`#btn-logout`）を追加
+- キャッシュバスター: `style.css?v=2`、`app.js?v=3`
+
+**style.css:**
+- ログイン画面スタイル追加（`#login-screen`, `.login-box`, `.login-input` 等）
+
+**app.js:**
+- Supabase クライアント初期化: `const sb = window.supabase.createClient(...)`
+- 認証関数追加: `_handleAuthSubmit`, `_toggleAuthMode`, `handleLogout`, `showLoginScreen`, `hideLoginScreen`
+- `init()` にセットアップ重複防止ガード（`_appSetupDone` フラグ）追加
+- `DOMContentLoaded` を認証対応に置き換え: `onAuthStateChange` で INITIAL_SESSION/SIGNED_IN/SIGNED_OUT を処理
+
+**sw.js:** キャッシュ名を `workoutlog3-v3` に更新
+
+### 認証フローの設計
+- アプリ起動時 → `INITIAL_SESSION` イベント → セッションあり: ログイン画面を隠してアプリ起動 / なし: ログイン画面を表示
+- ログイン/新規登録成功 → `SIGNED_IN` イベント → ログイン画面を隠してアプリ起動
+- ログアウト → `SIGNED_OUT` イベント → ログイン画面を表示
+
+### 次のステップ（Phase 3）
+
+- Supabase Auth の動作確認（新規登録・ログイン・自動ログイン）
+- `gasGet` / `gasPost` を Supabase クエリに置き換え（app.js の API 置き換え）

@@ -1682,3 +1682,83 @@ body {
   .s3-injury-panel { display: flex !important; flex: 1; }
 }
 
+/* ===== ログイン画面 ===== */
+#login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #111318;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.login-box {
+  background: #1c1f2a;
+  border-radius: 16px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.login-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 40px;
+  color: #d4f53c;
+  text-align: center;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.login-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #b0b8c8;
+  text-align: center;
+  margin: 0 0 4px;
+}
+.login-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: #111318;
+  border: 1px solid #2e3244;
+  border-radius: 10px;
+  color: #f0f0f0;
+  font-size: 14px;
+  font-family: 'Noto Sans JP', sans-serif;
+  box-sizing: border-box;
+}
+.login-input:focus { outline: none; border-color: #d4f53c; }
+.login-error {
+  color: #ff4d3a;
+  font-size: 12px;
+  text-align: center;
+  min-height: 16px;
+  margin: 0;
+}
+.login-primary-btn {
+  width: 100%;
+  padding: 14px;
+  background: #d4f53c;
+  border: none;
+  border-radius: 10px;
+  color: #111318;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+}
+.login-primary-btn:disabled { opacity: 0.5; cursor: default; }
+.login-switch-btn {
+  width: 100%;
+  padding: 8px;
+  background: none;
+  border: none;
+  color: #b0b8c8;
+  font-size: 13px;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
