@@ -2,10 +2,21 @@
 
 ## ⚠️ セッション開始時の必須アクション
 
-他の作業を始める前に、必ず以下の2ファイルを Read ツールで開いて読む。
+他の作業を始める前に、必ず以下を Read ツールで読む。
 
 1. `docs/dev-log.md` — 開発経緯・直近の作業状況
 2. `docs/migration-plan.md` — 移行時の要注意ポイント・実装制約（Phase 5 完了後は不要）
+
+### Phase 3 実装セッションの場合は追加で読む
+
+ユーザーが「Phase 3-A／3-B／3-C を進めて」と指示した場合、対応する impl ファイルを追加で読む。
+migration-plan.md に全体を読む必要はなく、該当ファイルだけでよい。
+
+| 指示 | 追加で読むファイル |
+|---|---|
+| Phase 3-A を進めて | `docs/phase3a-impl.md` |
+| Phase 3-B を進めて | `docs/phase3b-impl.md` |
+| Phase 3-C を進めて | `docs/phase3c-impl.md` |
 
 ## 開発ログ
 
