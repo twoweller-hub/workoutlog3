@@ -233,6 +233,254 @@ async function sbGetExerciseData(exerciseName) {
   return { lastDate, lastSets, lastMemo, totalMainSets, daysSinceLast };
 }
 
+async function sbGetHistory(offset) {
+  const uid = _userId;
+
+  const { data: sessData } = await sb.from('sessions')
+    .select('*')
+    .eq('user_id', uid)
+    .order('date', { ascending: false })
+    .order('start_time', { ascending: false });
+
+  const allSess = (sessData || []).map(toSession);
+  const paged   = allSess.slice(offset, offset + PER_PAGE);
+  const hasMore = allSess.length > offset + PER_PAGE;
+  if (paged.length === 0) return { sessions: [], hasMore: false };
+
+  const dateSet = new Set(paged.map(s => s.date));
+  const { data: recData } = await sb.from('records')
+    .select('*')
+    .eq('user_id', uid)
+    .in('date', [...dateSet]);
+
+  const recMap = {};
+  (recData || []).forEach(r => {
+    const sid    = r.session_id || (r.date + '|' + (r.menu || ''));
+    const exInst = r.ex_instance_id || (sid + '|' + r.exercise);
+    if (!recMap[sid]) recMap[sid] = {};
+    if (!recMap[sid][exInst]) recMap[sid][exInst] = { name: r.exercise, exInstanceId: r.ex_instance_id || '', sets: [] };
+    recMap[sid][exInst].sets.push({
+      setType:     r.set_type     || '',
+      setNum:      r.set_num      || 0,
+      side:        r.side         || '',
+      weight:      r.weight,
+      reps:        r.reps,
+      injurySite:  r.injury_site  || '',
+      injuryLevel: r.injury_level || '',
+      injuryMemo:  r.injury_memo  || '',
+      memo:        r.memo         || '',
+      duration:    r.duration,
+    });
+  });
+
+  paged.forEach(sess => {
+    const key = sess.sessionId || (sess.date + '|' + (sess.menu || ''));
+    sess.exercises = Object.values(recMap[key] || {});
+  });
+
+  return { sessions: paged, hasMore };
+}
+
+async function sbGetExercisesWithLastDate() {
+  const uid   = _userId;
+  const today = todayStr();
+  const todayMs = new Date(today).getTime();
+
+  const { data } = await sb.from('records')
+    .select('exercise, date')
+    .eq('user_id', uid);
+
+  const map = {};
+  (data || []).forEach(r => {
+    if (!map[r.exercise] || r.date > map[r.exercise]) map[r.exercise] = r.date;
+  });
+
+  const exercises = Object.keys(map).map(name => ({
+    name,
+    lastDate: map[name],
+    daysAgo: Math.round((todayMs - new Date(map[name]).getTime()) / 86400000),
+  }));
+  exercises.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+  return { exercises };
+}
+
+async function sbGetExerciseHistory(exerciseName, offset) {
+  const uid   = _userId;
+  const today = todayStr();
+  const todayMs = new Date(today).getTime();
+
+  const { data } = await sb.from('records')
+    .select('*')
+    .eq('user_id', uid)
+    .eq('exercise', exerciseName);
+
+  const entryMap = {};
+  (data || []).forEach(r => {
+    const key = r.ex_instance_id || r.date;
+    const dur = r.duration;
+    if (!entryMap[key]) {
+      entryMap[key] = { date: r.date, time: r.time || '', sets: [], firstDuration: dur };
+    }
+    entryMap[key].sets.push({
+      setType:        r.set_type      || '',
+      setNum:         r.set_num       || 0,
+      side:           r.side          || '',
+      weight:         r.weight,
+      reps:           r.reps,
+      targetInterval: r.target_interval,
+      injurySite:     r.injury_site   || '',
+      injuryLevel:    r.injury_level  || '',
+      injuryMemo:     r.injury_memo   || '',
+      memo:           r.memo          || '',
+      duration:       dur,
+    });
+    entryMap[key].lastTime = r.time || '';
+  });
+
+  const sorted = Object.keys(entryMap).sort((a, b) => {
+    const da = entryMap[a].date + entryMap[a].time;
+    const db = entryMap[b].date + entryMap[b].time;
+    return db.localeCompare(da);
+  });
+
+  const paged   = sorted.slice(offset, offset + PER_PAGE);
+  const hasMore = sorted.length > offset + PER_PAGE;
+
+  const dates = paged.map((key, idx) => {
+    const entry = entryMap[key];
+    const prevKey = sorted[offset + idx + 1];
+    let daysSincePrev = null;
+    if (prevKey) {
+      const thisMs = new Date(entry.date).getTime();
+      const prevMs = new Date(entryMap[prevKey].date).getTime();
+      daysSincePrev = Math.round((thisMs - prevMs) / 86400000);
+    }
+    let exerciseElapsed = null;
+    if (entry.time && entry.lastTime) {
+      const sp = entry.time.split(':').map(Number);
+      const ep = entry.lastTime.split(':').map(Number);
+      const lastSec       = ep[0] * 3600 + ep[1] * 60;
+      const firstRecSec   = sp[0] * 3600 + sp[1] * 60;
+      const firstStartSec = entry.firstDuration != null ? firstRecSec - entry.firstDuration : firstRecSec;
+      const diffSec = lastSec - firstStartSec;
+      if (diffSec > 0) exerciseElapsed = Math.round(diffSec / 60);
+    }
+    return {
+      date: entry.date, time: entry.time,
+      daysAgo: Math.round((todayMs - new Date(entry.date).getTime()) / 86400000),
+      daysSincePrev, exerciseElapsed,
+      sets: entry.sets,
+    };
+  });
+
+  return { dates, hasMore };
+}
+
+async function sbGetInjuryHistory() {
+  const { data } = await sb.from('records')
+    .select('date, session_id, exercise, set_type, set_num, side, injury_site, injury_level, injury_memo')
+    .eq('user_id', _userId)
+    .neq('injury_site', '')
+    .order('date', { ascending: false });
+
+  const records = (data || []).map(r => ({
+    date:        r.date,
+    sessionId:   r.session_id   || '',
+    exercise:    r.exercise,
+    setType:     r.set_type     || '',
+    setNum:      r.set_num      || 0,
+    side:        r.side         || '',
+    injurySite:  r.injury_site  || '',
+    injuryLevel: r.injury_level || '',
+    injuryMemo:  r.injury_memo  || '',
+  }));
+  return { records };
+}
+
+async function sbGetAnalysisData(exerciseName) {
+  const { data } = await sb.from('records')
+    .select('date, weight, reps')
+    .eq('user_id', _userId)
+    .eq('exercise', exerciseName)
+    .eq('set_type', 'メイン');
+
+  const dateMap = {};
+  (data || []).forEach(r => {
+    const w   = r.weight != null ? Number(r.weight) : 0;
+    const rep = r.reps   != null ? Number(r.reps)   : 0;
+    if (!dateMap[r.date]) dateMap[r.date] = { maxWeight: 0, maxReps: 0, totalReps: 0, totalVolume: 0, totalSets: 0 };
+    dateMap[r.date].maxWeight    = Math.max(dateMap[r.date].maxWeight, w);
+    dateMap[r.date].maxReps      = Math.max(dateMap[r.date].maxReps, rep);
+    dateMap[r.date].totalReps   += rep;
+    dateMap[r.date].totalVolume += w * rep;
+    dateMap[r.date].totalSets++;
+  });
+
+  return {
+    data: Object.keys(dateMap).sort().map(date => ({
+      date,
+      maxWeight:   dateMap[date].maxWeight,
+      maxReps:     dateMap[date].maxReps,
+      totalReps:   dateMap[date].totalReps,
+      totalVolume: Math.round(dateMap[date].totalVolume * 10) / 10,
+      totalSets:   dateMap[date].totalSets,
+    })),
+  };
+}
+
+async function sbUpdateExerciseRecords(d) {
+  const uid = _userId;
+
+  const { data: origData } = await sb.from('records')
+    .select('set_type, set_num, side, time, target_interval, duration')
+    .eq('user_id', uid)
+    .eq('ex_instance_id', d.exInstanceId || '')
+    .eq('exercise', d.exercise);
+
+  const origMap = {};
+  (origData || []).forEach(r => {
+    const key = r.set_type + '|' + r.set_num + '|' + (r.side || '');
+    if (!origMap[key]) origMap[key] = { time: r.time, targetInterval: r.target_interval, duration: r.duration };
+  });
+
+  if (d.exInstanceId) {
+    await sb.from('records').delete().eq('user_id', uid).eq('ex_instance_id', d.exInstanceId);
+  } else {
+    await sb.from('records').delete().eq('user_id', uid)
+      .eq('session_id', d.sessionId).eq('exercise', d.exercise);
+  }
+
+  if (!d.sets || d.sets.length === 0) return;
+
+  const rows = d.sets.map(s => {
+    const key  = s.type + '|' + s.setNum + '|' + (s.side || '');
+    const orig = origMap[key] || {};
+    return {
+      user_id:         uid,
+      session_id:      d.sessionId || '',
+      ex_instance_id:  d.exInstanceId || '',
+      date:            d.date,
+      time:            orig.time || '',
+      menu:            d.menu || '',
+      exercise:        d.exercise,
+      set_type:        s.type,
+      set_num:         s.setNum,
+      side:            s.side || '',
+      weight:          s.weight  != null ? s.weight  : null,
+      reps:            s.reps    != null ? s.reps    : null,
+      target_interval: orig.targetInterval != null ? orig.targetInterval : null,
+      injury_site:     s.injurySite  || '',
+      injury_level:    s.injuryLevel || '',
+      injury_memo:     s.injuryMemo  || '',
+      memo:            s.memo        || '',
+      duration:        orig.duration != null ? orig.duration : null,
+    };
+  });
+
+  const { error } = await sb.from('records').insert(rows);
+  if (error) { showToast('保存に失敗しました'); console.error(error); }
+}
+
 // =====================================================================
 //  DATE / DISPLAY UTILS
 // =====================================================================
@@ -1335,7 +1583,7 @@ async function loadHistoryDate() {
   }
 
   try {
-    const data = await gasGetWithRetry({ action: 'getHistory', offset: S.histDateOffset });
+    const data = await sbGetHistory(S.histDateOffset);
     const sessions = data.sessions || [];
     S.histDateHasMore = data.hasMore || false;
     if (!isLoadMore) { S.histDateItems = sessions; list.innerHTML = ''; }
@@ -1476,7 +1724,7 @@ async function loadHistExList() {
   if (S.histExWithLastDate) { renderHistExList(S.histExWithLastDate.exercises); return; }
   list.innerHTML = '<div class="loading-msg">読み込み中…</div>';
   try {
-    const data = await gasGet({ action: 'getExercisesWithLastDate' });
+    const data = await sbGetExercisesWithLastDate();
     S.histExWithLastDate = data;
     renderHistExList(data.exercises || []);
   } catch (e) {
@@ -1532,7 +1780,7 @@ async function loadHistExDetail() {
   }
 
   try {
-    const data = await gasGetWithRetry({ action: 'getExerciseHistory', exercise: S.histCurrentEx, offset: S.histExOffset });
+    const data = await sbGetExerciseHistory(S.histCurrentEx, S.histExOffset);
     const dates = data.dates || [];
     S.histExHasMore = data.hasMore || false;
     if (!isLoadMore) { S.histExItems = dates; list.innerHTML = ''; }
@@ -1628,7 +1876,7 @@ async function loadS3Hist(append = false) {
     moreBtn.disabled = true;
   }
   try {
-    const data = await gasGetWithRetry({ action: 'getExerciseHistory', exercise: exName, offset: S.s3HistOffset });
+    const data = await sbGetExerciseHistory(exName, S.s3HistOffset);
     const dates = data.dates || [];
     S.s3HistHasMore = data.hasMore || false;
     S.s3HistLoaded = true;
@@ -1827,7 +2075,7 @@ async function saveRecordModal() {
     });
   });
 
-  await gasPost({ action: 'updateExerciseRecords', date, menu: menu || '', exercise: exName, sessionId, exInstanceId, sets });
+  await sbUpdateExerciseRecords({ date, menu: menu || '', exercise: exName, sessionId, exInstanceId, sets });
   btn.textContent = '保存';
   btn.disabled = false;
   closeModal('modal-record-edit');
@@ -1844,7 +2092,7 @@ function deleteExerciseRecordsConfirm() {
   showConfirm('記録を削除',
     `「${exName}」の記録を削除しますか？\nこのセッションのログは残ります。`,
     async () => {
-      await gasPost({ action: 'updateExerciseRecords', date, menu: menu || '', exercise: exName, sessionId, exInstanceId, sets: [] });
+      await sbUpdateExerciseRecords({ date, menu: menu || '', exercise: exName, sessionId, exInstanceId, sets: [] });
       closeModal('modal-record-edit');
       S.editingRecord = null;
       showToast('削除しました');
@@ -1873,7 +2121,11 @@ async function saveSessionModal() {
   const condition    = getToggleVal('modal-sess-cond-row');
   const satisfaction = getToggleVal('modal-sess-satis-row');
   const comment      = document.getElementById('modal-sess-comment').value;
-  await gasPost({ action: 'updateSession', id: S.editingSession.id, condition, satisfaction, comment });
+  const { error: updErr } = await sb.from('sessions')
+    .update({ condition, satisfaction, comment })
+    .eq('user_id', _userId)
+    .eq('session_id', S.editingSession.sessionId);
+  if (updErr) { showToast('保存に失敗しました'); return; }
   const sess = S.histDateItems[S.editingSession.idx];
   if (sess) { sess.condition = condition; sess.satisfaction = satisfaction; sess.comment = comment; }
   closeModal('modal-session-edit');
@@ -1891,7 +2143,12 @@ function deleteSessionConfirm() {
   showConfirm('セッションを削除',
     `${dateLabel(sess.date)}の${label}を削除しますか？\nこのセッションの記録も全て削除されます。`,
     async () => {
-      await gasPost({ action: 'deleteSession', id: sess.id, sessionId: sess.sessionId });
+      await sb.from('records').delete().eq('user_id', _userId).eq('session_id', sess.sessionId);
+      const { error: delSessErr } = await sb.from('sessions')
+        .delete()
+        .eq('user_id', _userId)
+        .eq('session_id', sess.sessionId);
+      if (delSessErr) { showToast('削除に失敗しました'); return; }
       closeModal('modal-session-edit');
       S.editingSession = null;
       showToast('削除しました');
@@ -1917,7 +2174,7 @@ async function loadInjuryHistory() {
   document.getElementById('injury-date-list').innerHTML = '<div class="loading-msg">読み込み中…</div>';
   document.getElementById('injury-site-list').innerHTML = '<div class="loading-msg">読み込み中…</div>';
   try {
-    const data = await gasGet({ action: 'getInjuryHistory' });
+    const data = await sbGetInjuryHistory();
     S.injuryRecords = data.records || [];
     renderInjuryDate();
     renderInjurySite();
@@ -1936,7 +2193,7 @@ function loadS3Injury() {
     return;
   }
   dateList.innerHTML = '<div class="loading-msg">読み込み中…</div>';
-  gasGet({ action: 'getInjuryHistory' }).then(data => {
+  sbGetInjuryHistory().then(data => {
     S.injuryRecords = data.records || [];
     renderInjuryDate();
     renderInjurySite();
@@ -2067,7 +2324,7 @@ async function loadAnalysisExList() {
   const list = document.getElementById('analysis-ex-list');
   list.innerHTML = '<div class="loading-msg">読み込み中…</div>';
   try {
-    const data = await gasGet({ action: 'getExercisesWithLastDate' });
+    const data = await sbGetExercisesWithLastDate();
     S.analysisExList = data.exercises || [];
     renderAnalysisExList('');
   } catch (e) {
@@ -2098,7 +2355,7 @@ async function loadAnalysis(name) {
   document.getElementById('analysis-stats').innerHTML = '<div class="loading-msg">読み込み中…</div>';
 
   try {
-    const data = await gasGet({ action: 'getAnalysisData', exercise: name });
+    const data = await sbGetAnalysisData(name);
     const rows = data.data || [];
     renderAnalysis(rows);
   } catch (e) {

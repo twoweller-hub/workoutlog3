@@ -1,4 +1,4 @@
-const CACHE = 'workoutlog3-v4';
+const CACHE = 'workoutlog3-v5';
 const URLS = [
   '/workoutlog3/',
   '/workoutlog3/index.html',
