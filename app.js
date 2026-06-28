@@ -2,7 +2,6 @@
 
 const SUPABASE_URL     = 'https://bygocxazrbkydrqtbsrf.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_xYuWtGjhulxA4_vP00OqfA__3NedqRC';
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzfXMbAScXVYktNKv44qVu7tdQgjMoDFeRdx4zcJ7AZy6q47zl9VxRadfg6oSj4pzoH9Q/exec';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -55,36 +54,183 @@ const S = {
 // =====================================================================
 //  API
 // =====================================================================
-function gasGet(params) {
-  return new Promise((resolve, reject) => {
-    const cb = 'cb' + Date.now() + Math.random().toString(36).slice(2);
-    const qs = Object.entries({ ...params, callback: cb })
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-    const script = document.createElement('script');
-    const cleanup = () => { delete window[cb]; if (script.parentNode) document.head.removeChild(script); };
-    window[cb] = (data) => { cleanup(); resolve(data); };
-    script.onerror = () => { cleanup(); reject(new Error('GAS network error')); };
-    setTimeout(() => { cleanup(); reject(new Error('GAS timeout')); }, 30000);
-    script.src = GAS_URL + '?' + qs;
-    document.head.appendChild(script);
+function toExercise(r) {
+  return {
+    name:            r.name,
+    unit:            r.unit,
+    defaultInterval: r.default_interval,
+    bodyPart:        r.body_part,
+    mainEquipment:   r.main_equipment,
+    subEquipment:    r.sub_equipment,
+    hasSides:        r.has_sides,
+  };
+}
+
+function toRecord(r) {
+  return {
+    setType:        r.set_type,
+    setNum:         r.set_num,
+    side:           r.side || '',
+    weight:         r.weight,
+    reps:           r.reps,
+    targetInterval: r.target_interval,
+    injurySite:     r.injury_site  || '',
+    injuryLevel:    r.injury_level || '',
+    injuryMemo:     r.injury_memo  || '',
+    memo:           r.memo || '',
+    duration:       r.duration,
+    time:           r.time || '',
+    date:           r.date,
+    exercise:       r.exercise,
+    exInstanceId:   r.ex_instance_id || '',
+    sessionId:      r.session_id || '',
+  };
+}
+
+function toSession(r) {
+  return {
+    id:           r.id,
+    sessionId:    r.session_id,
+    date:         r.date,
+    menu:         r.menu || '',
+    startTime:    r.start_time || '',
+    endTime:      r.end_time   || '',
+    condition:    r.condition    || '',
+    satisfaction: r.satisfaction || '',
+    comment:      r.comment      || '',
+  };
+}
+
+const PER_PAGE = 20;
+
+async function sbGetInitialData() {
+  const uid = _userId;
+  const today = todayStr();
+  const todayMs = new Date(today).getTime();
+
+  const [exRes, menuRes, menuExRes, injRes, sessRes, recRes] = await Promise.all([
+    sb.from('exercises').select('*').eq('user_id', uid),
+    sb.from('menus').select('id, name').eq('user_id', uid),
+    sb.from('menu_exercises').select('menu_id, exercise_name, order_num').eq('user_id', uid).order('order_num'),
+    sb.from('injury_sites').select('name').eq('user_id', uid),
+    sb.from('sessions').select('menu, date, session_id').eq('user_id', uid),
+    sb.from('records').select('exercise, date, menu').eq('user_id', uid).order('date', {ascending: false}).limit(500),
+  ]);
+
+  const exercises = (exRes.data || []).map(toExercise);
+
+  const menuExMap = {};
+  (menuExRes.data || []).forEach(me => {
+    if (!menuExMap[me.menu_id]) menuExMap[me.menu_id] = [];
+    menuExMap[me.menu_id].push(me.exercise_name);
   });
-}
+  const menus = (menuRes.data || []).map(m => ({
+    name: m.name,
+    exercises: menuExMap[m.id] || [],
+  }));
 
-async function gasGetWithRetry(params) {
-  try {
-    return await gasGet(params);
-  } catch (e) {
-    return await gasGet(params);
+  const injurySites = (injRes.data || []).map(r => r.name);
+
+  const menuLastDates = {};
+  (sessRes.data || []).forEach(s => {
+    if (!s.menu) return;
+    if (!menuLastDates[s.menu] || s.date > menuLastDates[s.menu]) {
+      menuLastDates[s.menu] = s.date;
+    }
+  });
+  Object.keys(menuLastDates).forEach(menu => {
+    const d = menuLastDates[menu];
+    menuLastDates[menu] = { date: d, daysAgo: Math.round((todayMs - new Date(d).getTime()) / 86400000) };
+  });
+
+  const seen = new Set();
+  const recentSingle = [];
+  for (const r of (recRes.data || [])) {
+    if (r.menu !== '' || !r.exercise || seen.has(r.exercise)) continue;
+    seen.add(r.exercise);
+    const daysAgo = Math.round((todayMs - new Date(r.date).getTime()) / 86400000);
+    recentSingle.push({ name: r.exercise, lastDate: r.date, daysAgo });
+    if (recentSingle.length >= 5) break;
   }
+
+  const stats = _calcStats(sessRes.data || [], today);
+
+  return { exercises, menus, injurySites, menuLastDates, recentSingle, stats };
 }
 
-function gasPost(body) {
-  return fetch(GAS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  }).catch(() => {});
+function _calcStats(sessions, today) {
+  const todayMs = new Date(today).getTime();
+  const singleDates = new Set();
+  const menuDates   = new Set();
+  let singleToday = 0, menuToday = 0, singleTotal = 0, menuTotal = 0;
+
+  sessions.forEach(s => {
+    const isSingle = !!s.session_id && !s.menu;
+    if (isSingle) {
+      singleDates.add(s.date);
+      singleTotal++;
+      if (s.date === today) singleToday++;
+    } else {
+      menuDates.add(s.date);
+      menuTotal++;
+      if (s.date === today) menuToday++;
+    }
+  });
+
+  function calcStreak(dates) {
+    let streak = 0;
+    const cur = new Date(today);
+    if (!dates.has(today)) cur.setDate(cur.getDate() - 1);
+    for (let i = 0; i < 3650; i++) {
+      const ds = cur.toISOString().slice(0, 10);
+      if (!dates.has(ds)) break;
+      streak++;
+      cur.setDate(cur.getDate() - 1);
+    }
+    return streak;
+  }
+
+  return {
+    singleToday, singleStreak: calcStreak(singleDates), singleTotal,
+    menuToday,   menuStreak:   calcStreak(menuDates),   menuTotal,
+  };
+}
+
+async function sbGetExerciseData(exerciseName) {
+  const uid = _userId;
+  const today = todayStr();
+
+  const { data } = await sb.from('records')
+    .select('date, set_type, set_num, side, weight, reps, memo, session_id')
+    .eq('user_id', uid)
+    .eq('exercise', exerciseName);
+
+  if (!data || data.length === 0) {
+    return { lastDate: null, lastSets: [], lastMemo: '', totalMainSets: 0, daysSinceLast: null };
+  }
+
+  let lastDate = null, lastSessionId = null, totalMainSets = 0;
+  data.forEach(r => {
+    if (r.set_type === 'メイン') totalMainSets++;
+    if (!lastDate || r.date > lastDate ||
+        (r.date === lastDate && r.session_id && (!lastSessionId || r.session_id > lastSessionId))) {
+      lastDate = r.date;
+      lastSessionId = r.session_id;
+    }
+  });
+
+  const lastRecs = lastSessionId
+    ? data.filter(r => r.session_id === lastSessionId)
+    : data.filter(r => r.date === lastDate);
+
+  const lastSets = lastRecs.map(r => ({
+    type: r.set_type, setNum: r.set_num, side: r.side || '',
+    weight: r.weight, reps: r.reps,
+  }));
+  const lastMemo = (lastRecs.find(r => r.memo) || {}).memo || '';
+  const daysSinceLast = Math.round((new Date(today).getTime() - new Date(lastDate).getTime()) / 86400000);
+
+  return { lastDate, lastSets, lastMemo, totalMainSets, daysSinceLast };
 }
 
 // =====================================================================
@@ -183,6 +329,7 @@ function showConfirm(title, msg, cb, opts = {}) {
 
 let _authMode = 'login';
 let _appSetupDone = false;
+let _userId = null;
 
 function showLoginScreen() {
   document.getElementById('login-screen').style.display = 'flex';
@@ -260,7 +407,7 @@ async function init() {
   }
 
   try {
-    const data = await gasGet({ action: 'getInitialData' });
+    const data = await sbGetInitialData();
     S.exercises = data.exercises || [];
     S.menus = data.menus || [];
     S.injurySites = data.injurySites || [];
@@ -589,7 +736,7 @@ async function enterEx(idx) {
     const body = document.getElementById('s3-body');
     body.innerHTML = '<div class="loading-msg">前回データを読み込み中…</div>';
     try {
-      S.s3ExData = await gasGet({ action: 'getExerciseData', exercise: ex.name });
+      S.s3ExData = await sbGetExerciseData(ex.name);
       S.s3ExCache[ex.name] = S.s3ExData;
     } catch (e) {
       S.s3ExData = null;
@@ -959,7 +1106,7 @@ function onAddSet(btn) {
   document.getElementById('s3-body').scrollTop = 9999;
 }
 
-function completeEx() {
+async function completeEx() {
   const ex = S.session.exercises[S.currentExIdx];
   const exMaster = S.exercises.find(e => e.name === ex.name);
   const unit = exMaster?.unit || '回';
@@ -1005,21 +1152,37 @@ function completeEx() {
   ex.sets = sets;
 
   if (sets.length > 0) {
-    gasPost({ action: 'saveSets', date: today, menu: menuStorage(S.session.menu), exercise: ex.name, sessionId: S.session.sessionId, exInstanceId: ex.exInstanceId || '', sets });
+    const rows = sets.map(s => ({
+      user_id:         _userId,
+      session_id:      S.session.sessionId,
+      ex_instance_id:  ex.exInstanceId || '',
+      date:            today,
+      time:            s.time || '',
+      menu:            menuStorage(S.session.menu),
+      exercise:        ex.name,
+      set_type:        s.type,
+      set_num:         s.setNum,
+      side:            s.side || '',
+      weight:          s.weight  != null ? s.weight  : null,
+      reps:            s.reps    != null ? s.reps    : null,
+      target_interval: s.targetInterval != null ? s.targetInterval : null,
+      injury_site:     s.injurySite  || '',
+      injury_level:    s.injuryLevel || '',
+      injury_memo:     s.injuryMemo  || '',
+      memo:            s.memo        || '',
+      duration:        s.duration    != null ? s.duration : null,
+    }));
+    const { error } = await sb.from('records').insert(rows);
+    if (error) { showToast('記録の保存に失敗しました'); console.error(error); }
   }
 
   if (exMaster && targetInterval !== exMaster.defaultInterval) {
     exMaster.defaultInterval = targetInterval;
-    gasPost({
-      action: 'updateExercise',
-      name: exMaster.name, oldName: exMaster.name,
-      unit: exMaster.unit || '回',
-      hasSides: exMaster.hasSides,
-      bodyPart: exMaster.bodyPart || '',
-      mainEquipment: exMaster.mainEquipment || '',
-      subEquipment: exMaster.subEquipment || '',
-      defaultInterval: targetInterval,
-    });
+    const { error } = await sb.from('exercises')
+      .update({ default_interval: targetInterval })
+      .eq('user_id', _userId)
+      .eq('name', exMaster.name);
+    if (error) console.error('インターバル更新失敗', error);
   }
 
   const nextIdx = S.session.exercises.findIndex((e, i) => i > S.currentExIdx && !e.done);
@@ -1080,17 +1243,23 @@ async function saveSession() {
   const satis = document.querySelector('.wa-choice-btn[data-group="satis"].selected')?.dataset.val || '';
   const comment = document.getElementById('finish-comment').value || '';
 
-  await gasPost({
-    action: 'saveSession',
-    date: todayStr(),
-    menu: menuStorage(S.session.menu),
-    startTime: S.session.startTime,
-    endTime,
-    condition: cond,
+  const { error } = await sb.from('sessions').insert({
+    user_id:      _userId,
+    session_id:   S.session.sessionId,
+    date:         todayStr(),
+    menu:         menuStorage(S.session.menu),
+    start_time:   S.session.startTime,
+    end_time:     endTime,
+    condition:    cond,
     satisfaction: satis,
-    comment,
-    sessionId: S.session.sessionId,
+    comment:      comment,
   });
+  if (error) {
+    showToast('保存に失敗しました');
+    btn.textContent = '保存して終了';
+    btn.disabled = false;
+    return;
+  }
 
   showToast('保存しました！');
   stopTimer();
@@ -1104,7 +1273,7 @@ async function saveSession() {
   showRecordScreen('s1');
 
   // 「前回〇日前」表示を更新するためバックグラウンドで再取得
-  gasGet({ action: 'getInitialData' }).then(data => {
+  sbGetInitialData().then(data => {
     S.menuLastDates = data.menuLastDates || {};
     S.recentSingle = data.recentSingle || [];
     S.stats = data.stats || null;
@@ -2443,12 +2612,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'INITIAL_SESSION') {
-      if (session) { hideLoginScreen(); init(); }
+      if (session) { _userId = session.user.id; hideLoginScreen(); init(); }
     } else if (event === 'SIGNED_IN') {
-      hideLoginScreen(); init();
+      _userId = session.user.id; hideLoginScreen(); init();
     } else if (event === 'SIGNED_OUT') {
-      _appSetupDone = false;
-      showLoginScreen();
+      _userId = null; _appSetupDone = false; showLoginScreen();
     }
   });
 });
