@@ -168,3 +168,24 @@ migration-plan.md に Phase 1（Supabase セットアップ）の詳細手順を
 **⑧ メール未確認でもログインできてしまった**
 - Supabase のデフォルト設定ではメール未確認でもサインインが通る場合がある
 - 個人アプリなので実害なし。ログイン認証（パスワード）自体は正常に機能している
+
+---
+
+## 2026-06-28 — Phase 3 実装詳細を migration-plan.md に追記
+
+### 作業内容
+
+Phase 3（gasGet/gasPost → Supabase 置き換え）の実装が複数セッションにまたがることを想定し、
+GAS ソース（`workoutlog2/gas/api.gs`）と `app.js` を全文確認した上で、
+`docs/migration-plan.md` に「Phase 3 実装詳細」セクションを追記した。
+
+**追記した内容:**
+- `_userId` モジュール変数と `onAuthStateChange` での保存パターン
+- `toExercise` / `toSession` / `toRecord` 変換関数（snake_case → camelCase）
+- 全 GAS アクション（14種）の返却形式と Supabase 実装コード
+- `exerciseElapsed` の計算ロジック（GAS から確認済み）
+- `updateSession` / `deleteSession` の session_id 化方針
+- メニュー CRUD での menu_id 取得パターン
+- 推奨実装順序（14ステップ）とチェックリスト
+
+**コード変更なし。次のセッションから実装開始できる状態。**
