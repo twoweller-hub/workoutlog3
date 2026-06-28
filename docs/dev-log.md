@@ -317,3 +317,18 @@ records を先に DELETE → sessions を DELETE の順で実装。
 
 Phase 3-A〜C が完了し、GAS API (gasGet/gasPost) をすべて Supabase クライアントに置き換えた。
 次は Phase 4（データ移行）または動作確認。
+
+---
+
+## 2026-06-28 — バグ修正: 怪我記録削除後に怪我タブが即時反映されない
+
+### 原因
+
+記録を削除・編集する `saveRecordModal` / `deleteExerciseRecordsConfirm` で
+`S.histDateItems = []` はリセットしていたが `S.injuryRecords` をリセットしていなかった。
+そのため怪我タブが古いキャッシュを使い続け、リロードするまで反映されなかった。
+
+### 修正
+
+両関数に `S.injuryRecords = null` を追加。
+次に怪我タブを開いたとき `loadInjuryHistory()` が再取得する。

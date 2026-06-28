@@ -2083,6 +2083,7 @@ async function saveRecordModal() {
   showToast('保存しました');
   S.histDateItems = [];
   S.histDateOffset = 0;
+  S.injuryRecords = null;
   loadHistoryDate();
 }
 
@@ -2098,6 +2099,7 @@ function deleteExerciseRecordsConfirm() {
       showToast('削除しました');
       S.histDateItems = [];
       S.histDateOffset = 0;
+      S.injuryRecords = null;
       loadHistoryDate();
     }
   );
