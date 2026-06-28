@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>筋トレ記録アプリ</title>
+<link rel="manifest" href="/workoutlog3/manifest.webmanifest">
+<meta name="theme-color" content="#111318">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<div id="app">
+
+  <!-- サイドバーナビ（デスクトップのみ表示） -->
+  <nav id="sidebar-nav">
+    <div class="sidebar-logo">WORKOUT<br>LOG3</div>
+    <div class="wa-nav-item active" data-tab="record">
+      <div class="wa-nav-icon">📝</div>
+      <div class="wa-nav-label">記録</div>
+    </div>
+    <div class="wa-nav-item" data-tab="history">
+      <div class="wa-nav-icon">📋</div>
+      <div class="wa-nav-label">履歴</div>
+    </div>
+    <div class="wa-nav-item" data-tab="injury">
+      <div class="wa-nav-icon">🩹</div>
+      <div class="wa-nav-label">怪我</div>
+    </div>
+    <div class="wa-nav-item" data-tab="analysis">
+      <div class="wa-nav-icon">📊</div>
+      <div class="wa-nav-label">分析</div>
+    </div>
+    <div class="wa-nav-item" data-tab="settings">
+      <div class="wa-nav-icon">⚙️</div>
+      <div class="wa-nav-label">設定</div>
+    </div>
+  </nav>
+
+  <div id="content">
+
+    <!-- ===== 記録タブ ===== -->
+    <div id="tab-record" class="tab-pane active">
+
+      <!-- 画面1: 記録トップ -->
+      <div id="s1" class="screen active">
+        <div class="wa-header">
+          <div class="wa-header-row">
+            <div class="wa-app-title">WORKOUT LOG3</div>
+            <div class="wa-date" id="s1-date"></div>
+          </div>
+        </div>
+        <div class="wa-body">
+          <div class="wa-stats-table">
+            <div class="wa-stats-th wa-stats-corner"></div>
+            <div class="wa-stats-th">今日</div>
+            <div class="wa-stats-th">継続</div>
+            <div class="wa-stats-th">累計</div>
+            <div class="wa-stats-row-label">単発</div>
+            <div class="wa-stats-td"><span id="stat-single-today">--</span><em>回</em></div>
+            <div class="wa-stats-td"><span id="stat-single-streak">--</span><em>日</em></div>
+            <div class="wa-stats-td"><span id="stat-single-total">--</span><em>回</em></div>
+            <div class="wa-stats-row-label">メニュー</div>
+            <div class="wa-stats-td"><span id="stat-menu-today">--</span><em>回</em></div>
+            <div class="wa-stats-td"><span id="stat-menu-streak">--</span><em>日</em></div>
+            <div class="wa-stats-td"><span id="stat-menu-total">--</span><em>回</em></div>
+          </div>
+          <div class="s1-quick-grid" id="s1-quick-grid"></div>
+        </div>
+        <div class="wa-fixed-btn-wrap">
+          <button class="wa-set-menu-btn" id="btn-set-menu">📋　セットメニュー</button>
+        </div>
+      </div>
+
+      <!-- 画面1-m: セットメニュー選択 -->
+      <div id="s1-menu" class="screen">
+        <div class="wa-header">
+          <div class="wa-header-row">
+            <button class="wa-back-btn" id="btn-s1m-back">◀</button>
+            <div class="wa-header-title">セットメニュー</div>
+          </div>
+        </div>
+        <div class="wa-body">
+          <div id="s1-menus"></div>
+        </div>
+      </div>
+
+      <!-- 画面1-s: 単発記録 種目選択 -->
+      <div id="s1-single" class="screen">
+        <div class="wa-header">
+          <div class="wa-header-row">
+            <button class="wa-back-btn" id="btn-s1s-back">◀</button>
+            <div class="wa-header-title">単発記録</div>
+          </div>
+        </div>
+        <div class="wa-body">
+          <div id="s1s-recent-wrap" style="display:none">
+            <div class="wa-section-label">最近の単発記録</div>
+            <div id="s1s-recent-list"></div>
+            <div class="wa-divider-line"></div>
+          </div>
+          <div class="wa-section-label">全種目</div>
+          <div class="wa-ex-search-wrap">
+            <span>🔍</span>
+            <input type="text" id="s1s-search" placeholder="絞り込み…">
+          </div>
+          <div id="s1s-ex-list"></div>
+        </div>
+      </div>
+
+      <!-- 画面2: 種目リスト -->
+      <div id="s2" class="screen">
+        <div class="wa-header">
+          <div class="wa-header-row">
+            <button class="wa-back-btn" id="btn-s2-back">◀</button>
+            <div class="wa-header-title" id="s2-title"></div>
+            <div class="wa-date" id="s2-date"></div>
+          </div>
+        </div>
+        <div class="wa-timer-bar">
+          <span class="wa-timer-label">経過時間</span>
+          <span class="wa-timer-val" id="session-timer">00:00</span>
+          <span class="wa-start-time-label" id="s2-start-label"></span>
+        </div>
+        <div class="wa-body" id="s2-ex-list" style="padding:12px 16px 8px"></div>
+        <div class="wa-fixed-btn-wrap">
+          <button class="wa-action-btn" id="btn-end-training">トレーニングを終了する</button>
+        </div>
+      </div>
+
+      <!-- 画面3: 種目入力 -->
+      <div id="s3" class="screen">
+        <div class="wa-header">
+          <div class="wa-header-row">
+            <button class="wa-back-btn" id="btn-s3-back">◀</button>
+            <div class="wa-header-title" id="s3-title"></div>
+            <div class="wa-date" id="s3-date"></div>
+          </div>
+        </div>
+        <div class="wa-info-bar">
+          <div class="wa-timer-group">
+            <span class="wa-timer-label">経過時間</span>
+            <span class="wa-timer-sublabel">全体</span>
+            <span class="wa-timer-val" id="s3-timer">00:00</span>
+            <span class="wa-timer-sublabel">種目</span>
+            <span class="wa-timer-val" id="s3-ex-timer">00:00</span>
+          </div>
+        </div>
+        <div class="s3-content-wrap">
+          <div class="wa-body s3-main-col" id="s3-body" style="padding:12px 16px"></div>
+          <div class="s3-right-area" id="s3-right-area">
+            <div class="s3-right-tabs">
+              <button class="s3-right-tab active" id="s3-tab-hist">履歴</button>
+              <button class="s3-right-tab" id="s3-tab-injury">怪我</button>
+            </div>
+            <div class="s3-hist-panel" id="s3-hist-panel">
+              <div class="s3-hist-toggle" id="s3-hist-toggle">
+                <span class="s3-hist-toggle-label">HISTORY</span>
+                <span class="s3-hist-chev" id="s3-hist-chev">▼</span>
+              </div>
+              <div class="s3-hist-panel-body" id="s3-hist-panel-body">
+                <div class="s3-hist-stats-row">
+                  <div class="s3-hist-stats" id="s3-hist-stats"></div>
+                  <button class="wa-expand-all-btn" id="btn-s3-expand-all">すべて開く▼</button>
+                </div>
+                <div id="s3-hist-list"></div>
+                <div id="s3-hist-more-wrap" style="display:none; text-align:center; padding:8px 0 4px">
+                  <button class="wa-more-btn" id="btn-s3-hist-more">もっと見る</button>
+                </div>
+              </div>
+            </div>
+            <div class="s3-injury-panel" id="s3-injury-panel">
+              <div class="s3-injury-toggle" id="s3-injury-toggle">
+                <span class="s3-hist-toggle-label">INJURY</span>
+                <span class="s3-injury-chev" id="s3-injury-chev">▼</span>
+              </div>
+              <div class="s3-injury-panel-body" id="s3-injury-panel-body">
+                <div class="s3-injury-subtabs">
+                  <button class="s3-injury-subtab active" id="s3-injury-tab-date">日付</button>
+                  <button class="s3-injury-subtab" id="s3-injury-tab-site">部位</button>
+                  <button class="wa-expand-all-btn" id="btn-s3-injury-expand-all" style="margin-left:auto">すべて開く▼</button>
+                </div>
+                <div id="s3-injury-date-list"></div>
+                <div id="s3-injury-site-list" style="display:none"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="wa-fixed-btn-wrap">
+          <button class="wa-action-btn" id="btn-complete-ex">この種目を完了　→　次の種目へ</button>
+        </div>
+      </div>
+
+      <!-- 終了画面 -->
+      <div id="sFinish" class="screen">
+        <div class="wa-header">
+          <div class="wa-header-row">
+            <button class="wa-back-btn" id="btn-finish-back">◀</button>
+            <div class="wa-header-title">トレーニング完了</div>
+          </div>
+        </div>
+        <div class="wa-body" style="padding:24px 16px 16px">
+          <div class="wa-finish-msg">
+            <div class="wa-finish-emoji">💪</div>
+            <div class="wa-finish-title">お疲れ様でした</div>
+            <div class="wa-finish-time" id="finish-time-range">--:--〜--:--（--分）</div>
+          </div>
+          <div class="wa-summary-row">
+            <div class="wa-summary-card">
+              <div class="wa-summary-num" id="finish-ex-count">0<em>種目</em></div>
+              <div class="wa-summary-label">実施種目数</div>
+            </div>
+            <div class="wa-summary-card">
+              <div class="wa-summary-num" id="finish-set-count">0<em>セット</em></div>
+              <div class="wa-summary-label">総セット数</div>
+            </div>
+          </div>
+          <div class="wa-obsidian-wrap">
+            <div class="wa-obsidian-header">
+              <span>Obsidianメモ</span>
+              <button id="btn-copy-obsidian" class="wa-obsidian-copy-btn">コピー</button>
+            </div>
+            <textarea id="finish-obsidian" class="wa-obsidian-textarea" readonly rows="6"></textarea>
+          </div>
+          <div class="wa-section-label">コンディション</div>
+          <div class="wa-choice-row">
+            <button class="wa-choice-btn" data-group="cond" data-val="好調">好調</button>
+            <button class="wa-choice-btn" data-group="cond" data-val="普通">普通</button>
+            <button class="wa-choice-btn" data-group="cond" data-val="不調">不調</button>
+          </div>
+          <div class="wa-section-label">満足度</div>
+          <div class="wa-choice-row">
+            <button class="wa-choice-btn" data-group="satis" data-val="よくできた">よくできた</button>
+            <button class="wa-choice-btn" data-group="satis" data-val="まあまあ">まあまあ</button>
+            <button class="wa-choice-btn" data-group="satis" data-val="いまいち">いまいち</button>
+          </div>
+          <div>
+            <div class="wa-memo-label">感想</div>
+            <textarea class="wa-memo-input" id="finish-comment" rows="3" placeholder="今日のトレーニングについて自由記述"></textarea>
+          </div>
+        </div>
+        <div class="wa-fixed-btn-wrap">
+          <button class="wa-save-btn" id="btn-save-session">保存して終了</button>
+        </div>
+      </div>
+
+    </div><!-- /tab-record -->
+
+    <!-- ===== 履歴タブ ===== -->
+    <div id="tab-history" class="tab-pane">
+      <div class="wa-header">
+        <div class="wa-header-row"><div class="wa-app-title">HISTORY</div></div>
+        <div class="wa-stats-table wa-stats-table--header">
+          <div class="wa-stats-th wa-stats-corner"></div>
+          <div class="wa-stats-th">今日</div>
+          <div class="wa-stats-th">継続</div>
+          <div class="wa-stats-th">累計</div>
+          <div class="wa-stats-row-label">単発</div>
+          <div class="wa-stats-td"><span id="hist-stat-single-today">--</span><em>回</em></div>
+          <div class="wa-stats-td"><span id="hist-stat-single-streak">--</span><em>日</em></div>
+          <div class="wa-stats-td"><span id="hist-stat-single-total">--</span><em>回</em></div>
+          <div class="wa-stats-row-label">メニュー</div>
+          <div class="wa-stats-td"><span id="hist-stat-menu-today">--</span><em>回</em></div>
+          <div class="wa-stats-td"><span id="hist-stat-menu-streak">--</span><em>日</em></div>
+          <div class="wa-stats-td"><span id="hist-stat-menu-total">--</span><em>回</em></div>
+        </div>
+      </div>
+      <div class="wa-subtab-bar">
+        <button class="wa-subtab active" id="hist-tab-date" data-view="hist-date-view">日付</button>
+        <button class="wa-subtab" id="hist-tab-ex" data-view="hist-ex-view">種目</button>
+      </div>
+      <div class="wa-body" id="hist-body">
+        <!-- 日付軸ビュー -->
+        <div id="hist-date-view" class="hist-view active">
+          <div class="wa-expand-all-row">
+            <button class="wa-expand-all-btn" id="btn-hist-date-expand-all">すべて開く▼</button>
+          </div>
+          <div id="hist-date-list"></div>
+          <div id="hist-date-more-wrap" style="display:none;text-align:center;padding:12px">
+            <button class="wa-more-btn" id="btn-hist-date-more">もっと見る</button>
+          </div>
+        </div>
+        <!-- 種目軸ビュー -->
+        <div id="hist-ex-view" class="hist-view">
+          <div id="hist-ex-list-view">
+            <div class="wa-ex-search-wrap">
+              <span>🔍</span>
+              <input type="text" id="hist-ex-search" placeholder="絞り込み…">
+            </div>
+            <div id="hist-ex-list"></div>
+          </div>
+          <div id="hist-ex-detail-view" style="display:none">
+            <button class="wa-back-to" id="btn-hist-ex-back">◀ <span id="hist-ex-back-label">種目一覧に戻る</span></button>
+            <div class="wa-ex-hist-title" id="hist-ex-detail-title"></div>
+            <div class="wa-expand-all-row">
+              <button class="wa-expand-all-btn" id="btn-hist-ex-expand-all">すべて開く▼</button>
+            </div>
+            <div id="hist-ex-detail-list"></div>
+            <div id="hist-ex-detail-more-wrap" style="display:none;text-align:center;padding:12px">
+              <button class="wa-more-btn" id="btn-hist-ex-more">もっと見る</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-history -->
+
+    <!-- ===== 怪我タブ ===== -->
+    <div id="tab-injury" class="tab-pane">
+      <div class="wa-header">
+        <div class="wa-header-row"><div class="wa-app-title">INJURY</div></div>
+      </div>
+      <div class="wa-subtab-bar">
+        <button class="wa-subtab active" id="injury-tab-date" data-view="injury-date-view">日付</button>
+        <button class="wa-subtab" id="injury-tab-site" data-view="injury-site-view">部位</button>
+      </div>
+      <div class="wa-body" id="injury-body">
+        <!-- 日付ビュー -->
+        <div id="injury-date-view" class="injury-view active">
+          <div class="wa-expand-all-row">
+            <button class="wa-expand-all-btn" id="btn-injury-date-expand-all">すべて開く▼</button>
+          </div>
+          <div id="injury-date-list"></div>
+        </div>
+        <!-- 部位ビュー -->
+        <div id="injury-site-view" class="injury-view">
+          <div class="wa-expand-all-row">
+            <button class="wa-expand-all-btn" id="btn-injury-site-expand-all">すべて開く▼</button>
+          </div>
+          <div id="injury-site-list"></div>
+        </div>
+      </div>
+    </div><!-- /tab-injury -->
+
+    <!-- ===== 分析タブ ===== -->
+    <div id="tab-analysis" class="tab-pane">
+      <div class="wa-header">
+        <div class="wa-header-row"><div class="wa-app-title">ANALYSIS</div></div>
+      </div>
+      <div class="wa-body" id="analysis-body" style="padding:12px 16px">
+        <div id="analysis-select-view">
+          <div class="wa-section-label">種目を選択</div>
+          <div class="wa-ex-search-wrap">
+            <span>🔍</span>
+            <input type="text" id="analysis-search" placeholder="絞り込み…">
+          </div>
+          <div id="analysis-ex-list"></div>
+        </div>
+        <div id="analysis-content" style="display:none">
+          <button class="wa-back-to" id="btn-analysis-back">◀ <span>種目一覧に戻る</span></button>
+          <div class="analysis-ex-title" id="analysis-ex-name"></div>
+          <div class="analysis-stats-row" id="analysis-stats"></div>
+          <div class="analysis-chart-wrap">
+            <div class="analysis-chart-label">最高重量推移 (kg)</div>
+            <canvas id="chart-weight"></canvas>
+          </div>
+          <div class="analysis-chart-wrap">
+            <div class="analysis-chart-label">ボリューム推移 (kg×回)</div>
+            <canvas id="chart-volume"></canvas>
+          </div>
+          <div class="analysis-chart-wrap">
+            <div class="analysis-chart-label">最高回数推移 (回)</div>
+            <canvas id="chart-reps"></canvas>
+          </div>
+          <div class="analysis-chart-wrap">
+            <div class="analysis-chart-label">総回数推移 (回)</div>
+            <canvas id="chart-total-reps"></canvas>
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-analysis -->
+
+    <!-- ===== 設定タブ ===== -->
+    <div id="tab-settings" class="tab-pane">
+
+      <!-- 設定トップ -->
+      <div id="s-top" class="screen active">
+        <div class="wa-header"><div class="wa-header-row"><div class="wa-app-title">SETTINGS</div></div></div>
+        <div class="wa-body">
+          <div class="wa-setting-section">
+            <div class="wa-section-label">種目</div>
+            <div class="wa-setting-card">
+              <div class="wa-setting-row" id="btn-go-s-ex">
+                <div class="wa-setting-icon">🏋️</div>
+                <div class="wa-setting-name">種目の管理</div>
+                <div class="wa-setting-meta" id="s-top-ex-count"></div>
+                <div class="wa-setting-chevron">▶</div>
+              </div>
+            </div>
+          </div>
+          <div class="wa-setting-section">
+            <div class="wa-section-label">メニュー</div>
+            <div class="wa-setting-card">
+              <div class="wa-setting-row" id="btn-go-s-menu">
+                <div class="wa-setting-icon">📋</div>
+                <div class="wa-setting-name">メニューの管理</div>
+                <div class="wa-setting-meta" id="s-top-menu-count"></div>
+                <div class="wa-setting-chevron">▶</div>
+              </div>
+            </div>
+          </div>
+          <div class="wa-setting-section">
+            <div class="wa-section-label">怪我部位</div>
+            <div class="wa-setting-card">
+              <div class="wa-setting-row" id="btn-go-s-injury">
+                <div class="wa-setting-icon">🩹</div>
+                <div class="wa-setting-name">怪我部位の管理</div>
+                <div class="wa-setting-meta" id="s-top-injury-count"></div>
+                <div class="wa-setting-chevron">▶</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 種目管理 -->
+      <div id="s-ex" class="screen">
+        <div class="wa-header"><div class="wa-header-row">
+          <button class="wa-back-btn" id="btn-s-ex-back">◀</button>
+          <div class="wa-header-title">種目の管理</div>
+        </div></div>
+        <div class="wa-body">
+          <div class="wa-ex-search-wrap">
+            <span>🔍</span>
+            <input type="text" id="s-ex-search" placeholder="絞り込み…">
+          </div>
+          <div class="wa-setting-card" id="s-ex-card">
+            <div id="s-ex-list"></div>
+            <button class="wa-add-row-btn" id="btn-ex-add">＋ 種目を追加</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- メニュー管理 -->
+      <div id="s-menu" class="screen">
+        <div class="wa-header"><div class="wa-header-row">
+          <button class="wa-back-btn" id="btn-s-menu-back">◀</button>
+          <div class="wa-header-title">メニューの管理</div>
+        </div></div>
+        <div class="wa-body">
+          <div class="wa-setting-card" id="s-menu-card">
+            <div id="s-menu-list"></div>
+            <button class="wa-add-row-btn" id="btn-menu-add">＋ メニューを追加</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- メニュー詳細 -->
+      <div id="s-menu-detail" class="screen">
+        <div class="wa-header"><div class="wa-header-row">
+          <button class="wa-back-btn" id="btn-s-menu-detail-back">◀</button>
+          <div class="wa-header-title" id="s-menu-detail-title"></div>
+        </div></div>
+        <div class="wa-body">
+          <div class="wa-section-label">種目の順番（長押しで並び替え）</div>
+          <div class="wa-setting-card" id="s-menu-detail-card">
+            <div id="s-menu-detail-list"></div>
+            <button class="wa-add-row-btn" id="btn-menu-ex-add">＋ 種目を追加</button>
+          </div>
+          <button class="wa-delete-btn" id="btn-delete-menu">このメニューを削除</button>
+        </div>
+      </div>
+
+      <!-- 怪我部位管理 -->
+      <div id="s-injury" class="screen">
+        <div class="wa-header"><div class="wa-header-row">
+          <button class="wa-back-btn" id="btn-s-injury-back">◀</button>
+          <div class="wa-header-title">怪我部位の管理</div>
+        </div></div>
+        <div class="wa-body">
+          <div class="wa-setting-card" id="s-injury-card">
+            <div id="s-injury-list"></div>
+            <button class="wa-add-row-btn" id="btn-injury-add">＋ 部位を追加</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-settings -->
+
+  </div><!-- /content -->
+
+  <!-- ボトムナビ（固定） -->
+  <nav class="wa-bottom-nav" id="bottom-nav">
+    <div class="wa-nav-item active" data-tab="record">
+      <div class="wa-nav-icon">📝</div>
+      <div class="wa-nav-label">記録</div>
+    </div>
+    <div class="wa-nav-item" data-tab="history">
+      <div class="wa-nav-icon">📋</div>
+      <div class="wa-nav-label">履歴</div>
+    </div>
+    <div class="wa-nav-item" data-tab="injury">
+      <div class="wa-nav-icon">🩹</div>
+      <div class="wa-nav-label">怪我</div>
+    </div>
+    <div class="wa-nav-item" data-tab="analysis">
+      <div class="wa-nav-icon">📊</div>
+      <div class="wa-nav-label">分析</div>
+    </div>
+    <div class="wa-nav-item" data-tab="settings">
+      <div class="wa-nav-icon">⚙️</div>
+      <div class="wa-nav-label">設定</div>
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- ===== モーダル ===== -->
+
+<!-- 種目編集/追加 -->
+<div class="wa-modal-overlay" id="modal-ex">
+  <div class="wa-modal">
+    <div class="wa-modal-title" id="modal-ex-title">種目を編集</div>
+    <div class="wa-modal-label">種目名</div>
+    <input class="wa-modal-input" type="text" id="modal-ex-name" placeholder="例：ダンベルカール">
+    <div class="wa-modal-label">部位</div>
+    <input class="wa-modal-input" type="text" id="modal-ex-bodypart" placeholder="胸・背中・肩・腕・脚・体幹など">
+    <div class="wa-modal-label">単位</div>
+    <div class="wa-toggle-row" id="modal-ex-unit-row">
+      <button class="wa-toggle-btn active" data-val="回">回</button>
+      <button class="wa-toggle-btn" data-val="秒">秒</button>
+    </div>
+    <div class="wa-modal-label">左右</div>
+    <div class="wa-toggle-row" id="modal-ex-sides-row">
+      <button class="wa-toggle-btn active" data-val="なし">なし</button>
+      <button class="wa-toggle-btn" data-val="あり">あり</button>
+    </div>
+    <div class="wa-modal-label">インターバル（秒）</div>
+    <input class="wa-modal-input" type="number" id="modal-ex-interval" placeholder="90">
+    <div class="wa-modal-btn-row">
+      <button class="wa-modal-cancel" id="modal-ex-cancel">キャンセル</button>
+      <button class="wa-modal-save" id="modal-ex-save">保存</button>
+    </div>
+    <button class="wa-modal-delete" id="modal-ex-delete" style="display:none">この種目を削除</button>
+  </div>
+</div>
+
+<!-- メニュー追加 -->
+<div class="wa-modal-overlay" id="modal-menu-add">
+  <div class="wa-modal">
+    <div class="wa-modal-title">メニューを追加</div>
+    <div class="wa-modal-label">メニュー名</div>
+    <input class="wa-modal-input" type="text" id="modal-menu-name" placeholder="例：脚メニュー">
+    <div class="wa-modal-btn-row">
+      <button class="wa-modal-cancel" id="modal-menu-add-cancel">キャンセル</button>
+      <button class="wa-modal-save" id="modal-menu-add-save">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- メニューに種目を追加 -->
+<div class="wa-modal-overlay" id="modal-menu-ex-add">
+  <div class="wa-modal">
+    <div class="wa-modal-title">種目を追加</div>
+    <div class="wa-ex-search-wrap" style="margin-bottom:8px">
+      <span>🔍</span>
+      <input type="text" id="modal-menu-ex-search" placeholder="絞り込み…">
+    </div>
+    <div id="modal-menu-ex-list" style="max-height:280px;overflow-y:auto"></div>
+    <div class="wa-modal-btn-row" style="margin-top:12px">
+      <button class="wa-modal-cancel" id="modal-menu-ex-cancel">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- セッションに種目を追加 -->
+<div class="wa-modal-overlay" id="modal-session-ex-add">
+  <div class="wa-modal">
+    <div class="wa-modal-title">種目を追加</div>
+    <div class="wa-ex-search-wrap" style="margin-bottom:8px">
+      <span>🔍</span>
+      <input type="text" id="modal-session-ex-search" placeholder="絞り込み…">
+    </div>
+    <div id="modal-session-ex-list" style="max-height:280px;overflow-y:auto"></div>
+    <div class="wa-modal-btn-row" style="margin-top:12px">
+      <button class="wa-modal-cancel" id="modal-session-ex-cancel">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- 怪我部位編集/追加 -->
+<div class="wa-modal-overlay" id="modal-injury">
+  <div class="wa-modal">
+    <div class="wa-modal-title" id="modal-injury-title">怪我部位を編集</div>
+    <div class="wa-modal-label">部位名</div>
+    <input class="wa-modal-input" type="text" id="modal-injury-name">
+    <div class="wa-modal-btn-row">
+      <button class="wa-modal-cancel" id="modal-injury-cancel">キャンセル</button>
+      <button class="wa-modal-save" id="modal-injury-save">保存</button>
+    </div>
+    <button class="wa-modal-delete" id="modal-injury-delete" style="display:none">この部位を削除</button>
+  </div>
+</div>
+
+<!-- 確認ダイアログ -->
+<div class="wa-modal-overlay" id="modal-confirm">
+  <div class="wa-modal">
+    <div class="wa-modal-title" id="modal-confirm-title">確認</div>
+    <div id="modal-confirm-msg" style="font-size:14px;color:#b0b8c8;margin-bottom:20px;line-height:1.6"></div>
+    <div class="wa-modal-btn-row">
+      <button class="wa-modal-cancel" id="modal-confirm-cancel">キャンセル</button>
+      <button id="modal-confirm-ok" style="flex:2;padding:12px;background:#ff4d3a;border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 記録編集 -->
+<div class="wa-modal-overlay" id="modal-record-edit">
+  <div class="wa-modal">
+    <div class="wa-modal-title" id="modal-rec-title">記録を編集</div>
+    <div id="modal-rec-datetime" style="font-size:13px;color:#b0b8c8;margin-bottom:12px;padding:6px 10px;background:#111318;border-radius:8px"></div>
+    <div id="modal-rec-body" style="max-height:50vh;overflow-y:auto;margin-bottom:12px"></div>
+    <div class="wa-modal-btn-row">
+      <button class="wa-modal-cancel" id="modal-rec-cancel">キャンセル</button>
+      <button class="wa-modal-save" id="modal-rec-save">保存</button>
+    </div>
+    <button class="wa-modal-delete" id="modal-rec-delete">この種目の記録を全て削除</button>
+  </div>
+</div>
+
+<!-- セッション編集 -->
+<div class="wa-modal-overlay" id="modal-session-edit">
+  <div class="wa-modal">
+    <div class="wa-modal-title">セッションを編集</div>
+    <div id="modal-sess-datetime" style="font-size:13px;color:#b0b8c8;margin-bottom:16px;padding:8px 12px;background:#111318;border-radius:8px"></div>
+    <div class="wa-modal-label">コンディション</div>
+    <div class="wa-toggle-row" id="modal-sess-cond-row">
+      <button class="wa-toggle-btn" data-val="好調">好調</button>
+      <button class="wa-toggle-btn" data-val="普通">普通</button>
+      <button class="wa-toggle-btn" data-val="不調">不調</button>
+    </div>
+    <div class="wa-modal-label">満足度</div>
+    <div class="wa-toggle-row" id="modal-sess-satis-row">
+      <button class="wa-toggle-btn" data-val="よくできた">よくできた</button>
+      <button class="wa-toggle-btn" data-val="まあまあ">まあまあ</button>
+      <button class="wa-toggle-btn" data-val="いまいち">いまいち</button>
+    </div>
+    <div class="wa-modal-label">感想</div>
+    <textarea class="wa-modal-input" id="modal-sess-comment" rows="3" placeholder="自由記述"></textarea>
+    <div class="wa-modal-btn-row">
+      <button class="wa-modal-cancel" id="modal-sess-cancel">キャンセル</button>
+      <button class="wa-modal-save" id="modal-sess-save">保存</button>
+    </div>
+    <button class="wa-modal-delete" id="modal-sess-delete">このセッションを削除</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/workoutlog3/sw.js');
+  }
+</script>
+<script src="app.js?v=1"></script>
+</body>
+</html>

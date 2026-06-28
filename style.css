@@ -1,0 +1,1684 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* スクロールバー（Chrome/Safari/Edge） */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #111318; }
+::-webkit-scrollbar-thumb { background: #2e3244; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4a5068; }
+/* Firefox */
+.wa-body, .wa-modal { scrollbar-width: thin; scrollbar-color: #2e3244 #111318; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: #0a0c10;
+  font-family: 'Noto Sans JP', sans-serif;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+#app {
+  background: #111318;
+  color: #eef0f4;
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+#content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* =====================
+   タブペイン
+===================== */
+.tab-pane {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+.tab-pane.active { display: flex; }
+
+/* =====================
+   スクリーン（記録・設定タブ内）
+===================== */
+.screen {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+.screen.active { display: flex; }
+
+/* =====================
+   ヘッダー
+===================== */
+.wa-header {
+  padding: 16px 20px 12px 12px;
+  background: rgba(17,19,24,0.97);
+  border-bottom: 1px solid #2e3244;
+  flex-shrink: 0;
+}
+.wa-header-row { display: flex; align-items: center; gap: 19px; }
+.wa-app-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: #d4f53c;
+  line-height: 1;
+  flex: 1;
+}
+.wa-header-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: #d4f53c;
+  line-height: 1;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wa-header-sub { font-size: 11px; color: #b0b8c8; }
+.wa-date { font-size: 12px; color: #b0b8c8; padding-bottom: 2px; flex-shrink: 0; white-space: nowrap; }
+.wa-back-btn {
+  background: none;
+  border: 1px solid #2e3244;
+  border-radius: 6px;
+  color: #9ba3b5;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 7px 11px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* =====================
+   ボトムナビ
+===================== */
+.wa-bottom-nav {
+  flex-shrink: 0;
+  background: rgba(17,19,24,0.97);
+  border-top: 1px solid #2e3244;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0 calc(16px + env(safe-area-inset-bottom));
+}
+.wa-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 16px;
+}
+.wa-nav-icon { font-size: 20px; opacity: 0.3; }
+.wa-nav-label { font-size: 10px; color: #6e7789; letter-spacing: 0.5px; }
+.wa-nav-item.active .wa-nav-icon { opacity: 1; }
+.wa-nav-item.active .wa-nav-label { color: #d4f53c; }
+
+/* =====================
+   ボディ（スクロールエリア）
+===================== */
+.wa-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.wa-section-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #b0b8c8;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.wa-divider-line { height: 1px; background: #2e3244; margin: 8px 0; }
+.wa-divider { height: 1px; background: #2e3244; margin: 12px 0; }
+
+/* =====================
+   固定ボタンエリア
+===================== */
+.wa-fixed-btn-wrap {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border-top: 1px solid #2e3244;
+  background: #111318;
+}
+
+/* =====================
+   メニューアイテム（画面1）
+===================== */
+.wa-menu-item {
+  display: flex;
+  align-items: center;
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  gap: 14px;
+}
+.wa-menu-item:hover { border-color: #d4f53c; background: #1e2230; }
+.wa-menu-icon { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
+.wa-menu-info { flex: 1; }
+.wa-menu-name { font-size: 15px; font-weight: 700; color: #eef0f4; margin-bottom: 2px; }
+.wa-menu-meta { font-size: 11px; color: #b0b8c8; }
+.wa-menu-chevron { font-size: 12px; color: #b0b8c8; }
+
+/* =====================
+   統計行（記録・履歴タブ共通）
+===================== */
+.wa-stats-table {
+  margin: 14px 16px 0;
+  border: 1px solid #2e3244;
+  border-radius: 10px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 62px 1fr 1fr 1fr;
+}
+.wa-stats-table--header {
+  margin: 10px 16px 14px;
+}
+.wa-stats-table > * {
+  border-right: 1px solid #2e3244;
+  border-bottom: 1px solid #2e3244;
+}
+.wa-stats-table > *:nth-child(4n) { border-right: none; }
+.wa-stats-table > *:nth-child(n+9) { border-bottom: none; }
+.wa-stats-th {
+  padding: 5px 0;
+  text-align: center;
+  font-size: 10px;
+  color: #b0b8c8;
+  background: #161920;
+}
+.wa-stats-row-label {
+  padding: 6px 4px;
+  font-size: 11px;
+  color: #b0b8c8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #161920;
+}
+.wa-stats-td {
+  text-align: center;
+  padding: 6px 4px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: #eef0f4;
+  line-height: 1.3;
+}
+.wa-stats-td em {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 10px;
+  color: #b0b8c8;
+  font-style: normal;
+}
+
+/* =====================
+   記録トップ クイックグリッド
+===================== */
+.s1-quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px;
+}
+.s1-quick-cell {
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 12px;
+  min-height: 110px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  gap: 10px;
+  text-align: center;
+}
+.s1-quick-cell:hover { border-color: #d4f53c; background: #1e2230; }
+.s1-quick-emoji { font-size: 32px; }
+.s1-quick-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #eef0f4;
+  line-height: 1.3;
+  word-break: break-all;
+}
+.s1-quick-meta {
+  font-size: 10px;
+  color: #b0b8c8;
+  line-height: 1.4;
+  text-align: center;
+}
+.s1-quick-single { border-style: dashed; border-color: #4a5068; }
+.s1-quick-single .s1-quick-emoji { font-size: 26px; color: #b0b8c8; }
+.s1-quick-single .s1-quick-name { color: #b0b8c8; }
+.s1-quick-single:hover { border-style: solid; border-color: #d4f53c; }
+
+/* =====================
+   セットメニューボタン
+===================== */
+.wa-set-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 12px;
+  padding: 20px 16px;
+  color: #b0b8c8;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 72px;
+}
+.wa-set-menu-btn:hover { border-color: #d4f53c; color: #d4f53c; background: #1e2230; }
+
+/* =====================
+   単発記録ボタン（旧、他画面で使用中の場合のため残す）
+===================== */
+.wa-single-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #b0b8c8;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 52px;
+}
+.wa-single-btn:hover { border-color: #d4f53c; color: #d4f53c; background: #1e2230; }
+
+/* =====================
+   アクションボタン（黄緑2px枠）
+===================== */
+.wa-action-btn {
+  width: 100%;
+  padding: 14px;
+  background: none;
+  border: 2px solid #d4f53c;
+  border-radius: 12px;
+  color: #d4f53c;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.wa-action-btn:hover { background: rgba(212,245,60,0.08); }
+
+/* =====================
+   保存ボタン（黄緑塗りつぶし）
+===================== */
+.wa-save-btn {
+  width: 100%;
+  padding: 14px;
+  background: #d4f53c;
+  border: none;
+  border-radius: 12px;
+  color: #111318;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.wa-save-btn:hover { opacity: 0.88; }
+
+/* =====================
+   タイマーバー
+===================== */
+.wa-timer-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: #1c1f2a;
+  border-bottom: 1px solid #2e3244;
+  flex-shrink: 0;
+}
+.wa-timer-label { font-size: 11px; color: #b0b8c8; letter-spacing: 1px; }
+.wa-timer-sublabel { font-size: 11px; color: #b0b8c8; }
+.wa-timer-group { display: flex; align-items: center; gap: 8px; }
+.wa-timer-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: #d4f53c;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+/* =====================
+   種目リスト（画面2）
+===================== */
+.wa-ex-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+.wa-ex-item:hover { background: #1c1f2a; border-color: #2e3244; }
+.wa-ex-item.done { opacity: 0.4; cursor: default; pointer-events: none; }
+.wa-ex-item.active { background: rgba(212,245,60,0.08); border-color: rgba(212,245,60,0.3); }
+.wa-ex-status { width: 22px; text-align: center; flex-shrink: 0; }
+.wa-ex-status.check { color: #d4f53c; font-size: 16px; }
+.wa-ex-status.play { color: #d4f53c; font-size: 13px; }
+.wa-ex-status.pending { color: #2e3244; font-size: 18px; }
+.wa-ex-info { flex: 1; min-width: 0; }
+.wa-ex-name { font-size: 14px; font-weight: 700; color: #eef0f4; }
+.wa-ex-item.active .wa-ex-name { color: #d4f53c; }
+.wa-ex-item.done .wa-ex-name { color: #6e7789; }
+.wa-ex-prev { font-size: 11px; color: #b0b8c8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wa-ex-chevron { font-size: 11px; color: #3a3f52; flex-shrink: 0; }
+.wa-add-ex-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #b0b8c8;
+  font-size: 13px;
+  font-family: 'Noto Sans JP', sans-serif;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color 0.15s;
+  width: 100%;
+}
+.wa-add-ex-btn:hover { color: #eef0f4; }
+
+/* =====================
+   種目入力（画面3）
+===================== */
+.wa-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  background: #1c1f2a;
+  border-bottom: 1px solid #2e3244;
+  flex-shrink: 0;
+}
+.wa-info-start { font-size: 11px; color: #b0b8c8; }
+.wa-interval-row { display: flex; align-items: center; gap: 6px; }
+.wa-interval-in-body {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0 14px;
+  border-bottom: 1px solid #2e3244;
+  margin-bottom: 14px;
+}
+.wa-interval-label { font-size: 11px; color: #b0b8c8; }
+.wa-interval-input {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  color: #eef0f4;
+  width: 52px;
+  text-align: center;
+  background: #272b38;
+  border: 1px solid #2e3244;
+  border-radius: 6px;
+  padding: 2px 4px;
+  letter-spacing: 1px;
+}
+
+.wa-prev-box {
+  background: #1c1f2a;
+  border-left: 2px solid #d4f53c;
+  border-radius: 0 8px 8px 0;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.wa-prev-label { font-size: 10px; color: #b0b8c8; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.wa-prev-memo { font-size: 12px; color: #c8d0dc; margin-bottom: 4px; line-height: 1.5; white-space: pre-wrap; }
+.wa-prev-sets { font-size: 12px; color: #b0b8c8; margin-bottom: 2px; }
+.wa-prev-stats { font-size: 11px; color: #b0b8c8; }
+
+.wa-side-section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #d4f53c;
+  letter-spacing: 1px;
+  margin: 10px 0 6px;
+  padding-left: 2px;
+}
+
+.wa-set-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 4px; }
+.wa-set-num { font-size: 20px; font-weight: 700; color: #d4f53c; display: inline-flex; align-items: center; flex-shrink: 0; padding-top: 6px; }
+.wa-set-prefix { display: inline-block; width: 1em; }
+.wa-set-body { flex: 1; min-width: 0; }
+.wa-set-main-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#s3-body .wa-set-row { background: #1c1f2a; border: 1px solid transparent; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+#s3-body .wa-set-row:has(.wa-record-btn.pulse),
+#s3-body .wa-set-row:has(.wa-record-btn.started) { border-color: #d4f53c; }
+.wa-set-input {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: #eef0f4;
+  width: 64px;
+  text-align: center;
+  background: #111318;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  padding: 6px 4px;
+  letter-spacing: 1px;
+}
+.wa-set-input:focus { outline: none; border-color: #d4f53c; }
+.wa-set-unit { font-size: 11px; color: #b0b8c8; flex-shrink: 0; width: 14px; }
+.wa-set-cross { font-size: 13px; color: #6e7789; flex-shrink: 0; }
+.wa-record-btn {
+  flex: 1;
+  padding: 8px 6px;
+  border-radius: 8px;
+  border: 1px solid #d4f53c;
+  background: #d4f53c;
+  color: #111318;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.wa-record-btn:hover { opacity: 0.6; }
+@keyframes wa-btn-started-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(212, 245, 60, 0.7); filter: brightness(1); }
+  100% { box-shadow: 0 0 0 40px rgba(212, 245, 60, 0); filter: brightness(1.9); }
+}
+.wa-record-btn.started {
+  background: #111318;
+  border-color: #d4f53c;
+  color: #d4f53c;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 1;
+  animation: wa-btn-started-pulse 0.5s ease-in-out infinite;
+}
+.wa-record-btn.recorded {
+  background: rgba(212,245,60,0.18);
+  border-color: rgba(212,245,60,0.4);
+  color: #d4f53c;
+}
+.wa-record-btn.recorded:hover {
+  background: rgba(212,245,60,0.55);
+  border-color: #d4f53c;
+  color: #111318;
+}
+@keyframes wa-btn-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 141, 26, 0.7); filter: brightness(1); }
+  100%       { box-shadow: 0 0 0 40px rgba(255,159,64,0); filter: brightness(1.9); }
+}
+.wa-record-btn.pulse {
+  background: #ff9123;
+  border-color: #ff9123;
+  color: #111318;
+  position: relative;
+  z-index: 1;
+  animation: wa-btn-pulse 0.5s ease-in-out infinite;
+}
+
+.wa-interval-auto { font-size: 10px; color: #7a8394; margin: -4px 0 4px 0; padding-left: 12px; }
+
+.wa-add-row { display: flex; gap: 12px; margin-top: 6px; margin-bottom: 4px; }
+.wa-add-btn {
+  background: none;
+  border: none;
+  color: #b0b8c8;
+  font-size: 12px;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.wa-add-btn:hover { color: #eef0f4; }
+
+.wa-set-injury { margin-top: 2px; margin-bottom: 2px; }
+.wa-set-memo { margin-top: 4px; margin-bottom: 0; }
+.wa-set-injury-toggle {
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: none;
+  color: #5a6070; font-size: 11px;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer; padding: 2px 0;
+  transition: color 0.15s;
+}
+.wa-set-injury-toggle:hover { color: #9ba3b5; }
+.wa-set-injury-toggle.has-injury { color: #ff9f40; }
+.wa-set-injury-chev { font-size: 9px; transition: transform 0.2s; }
+.wa-set-injury-body { display: none; padding: 6px 0 4px; }
+.wa-set-injury-body.open { display: block; }
+
+.wa-injury-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: #b0b8c8;
+  font-size: 12px;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s;
+}
+.wa-injury-toggle.open { border-color: rgba(212,245,60,0.3); color: #c8d0dc; }
+.wa-injury-chevron { margin-left: auto; transition: transform 0.2s; font-size: 10px; }
+.wa-injury-body { display: none; padding: 10px 0 4px; }
+.wa-injury-body.open { display: block; }
+.wa-injury-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.wa-injury-select {
+  flex: 1;
+  font-size: 13px;
+  background: #111318;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #eef0f4;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.wa-memo-label { font-size: 10px; color: #b0b8c8; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.wa-memo-input {
+  width: 100%;
+  background: #111318;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #eef0f4;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+}
+.wa-memo-input::placeholder { color: #3a3f52; }
+.wa-memo-input:focus { border-color: #d4f53c; }
+
+/* =====================
+   終了画面
+===================== */
+.wa-finish-msg { text-align: center; margin-bottom: 24px; }
+.wa-finish-emoji { font-size: 40px; margin-bottom: 10px; }
+.wa-finish-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: #eef0f4;
+  margin-bottom: 6px;
+}
+.wa-finish-time {
+  font-size: 15px;
+  color: #d4f53c;
+  letter-spacing: 1px;
+  margin-top: 6px;
+}
+@keyframes obsidian-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(212, 245, 60, 0.7); }
+  100% { box-shadow: 0 0 0 18px rgba(212, 245, 60, 0); }
+}
+.wa-obsidian-wrap { margin-bottom: 20px; }
+.wa-obsidian-wrap.pulsing {
+  border: 1px solid #d4f53c;
+  border-radius: 10px;
+  padding: 10px;
+  animation: obsidian-glow 0.5s ease-in-out infinite;
+}
+.wa-obsidian-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #b0b8c8;
+  margin-bottom: 6px;
+}
+.wa-obsidian-copy-btn {
+  background: #1c1f2a;
+  border: 1px solid #3a3f56;
+  color: #d4f53c;
+  border-radius: 4px;
+  padding: 3px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.wa-obsidian-textarea {
+  width: 100%;
+  background: #0d0f14;
+  color: #c8d0e0;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-family: monospace;
+  resize: none;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+.wa-summary-row { display: flex; gap: 8px; margin-bottom: 20px; }
+.wa-summary-card {
+  flex: 1;
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+.wa-summary-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  color: #eef0f4;
+  line-height: 1;
+}
+.wa-summary-num em {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 11px;
+  color: #b0b8c8;
+  font-style: normal;
+}
+.wa-summary-label { font-size: 10px; color: #b0b8c8; margin-top: 4px; }
+
+.wa-choice-row { display: flex; gap: 8px; margin-bottom: 20px; }
+.wa-choice-btn {
+  flex: 1;
+  padding: 12px 6px;
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 10px;
+  color: #b0b8c8;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.wa-choice-btn.selected {
+  background: rgba(212,245,60,0.1);
+  border-color: rgba(212,245,60,0.5);
+  color: #d4f53c;
+}
+
+/* =====================
+   履歴タブ
+===================== */
+.wa-subtab-bar {
+  display: flex;
+  padding: 10px 16px;
+  gap: 8px;
+  border-bottom: 1px solid #2e3244;
+  flex-shrink: 0;
+  background: #111318;
+}
+.wa-subtab {
+  flex: 1;
+  padding: 8px;
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  color: #b0b8c8;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.wa-subtab.active {
+  background: rgba(212,245,60,0.1);
+  border-color: rgba(212,245,60,0.5);
+  color: #d4f53c;
+}
+
+.hist-view { display: none; }
+.hist-view.active { display: block; }
+
+/* 日付軸 */
+.wa-session-item { border: 1px solid #2e3244; border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+.wa-session-item.expanded { border-color: rgba(212,245,60,0.3); }
+.wa-session-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  cursor: pointer;
+  background: #1c1f2a;
+  transition: background 0.15s;
+}
+.wa-session-header:hover { background: #1e2230; }
+.wa-session-date { font-size: 13px; font-weight: 700; color: #eef0f4; flex-shrink: 0; white-space: nowrap; }
+.wa-session-date span { font-size: 11px; color: #b0b8c8; font-weight: 400; margin-left: 4px; }
+.wa-session-menu { font-size: 13px; color: #d4f53c; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.injury-date-sites { font-size: 12px; color: #b0b8c8; flex: 1; }
+.wa-session-dur { font-size: 11px; color: #b0b8c8; flex-shrink: 0; }
+.wa-session-chev { font-size: 10px; color: #b0b8c8; margin-left: 6px; transition: transform 0.2s; }
+.wa-session-item.expanded .wa-session-chev { transform: rotate(180deg); }
+.wa-session-body { display: none; background: #161920; padding: 10px 14px 12px; }
+.wa-session-item.expanded .wa-session-body { display: block; }
+.wa-session-cond { display: flex; gap: 12px; margin-bottom: 10px; font-size: 11px; color: #b0b8c8; }
+.wa-session-cond span { color: #eef0f4; }
+.wa-session-feeling { font-size: 11px; color: #b0b8c8; margin-bottom: 10px; line-height: 1.5; white-space: pre-wrap; }
+.wa-ex-row { padding: 8px 0; border-top: 1px solid #2e3244; }
+.wa-ex-row-name { font-size: 13px; font-weight: 700; color: #d4f53c; cursor: pointer; margin-bottom: 2px; transition: color 0.15s; }
+.wa-ex-row-name:hover { color: #eef0f4; }
+.wa-ex-row-main { font-size: 13px; color: #b0b8c8; margin-bottom: 2px; }
+.wa-ex-row-warm { font-size: 12px; color: #6e7789; margin-bottom: 2px; }
+.wa-ex-row-injury { font-size: 12px; color: #ff9f40; margin-bottom: 2px; white-space: pre-wrap; }
+.wa-ex-row-memo { font-size: 12px; color: #9ba3b5; white-space: pre-wrap; }
+
+/* 種目軸リスト */
+.wa-ex-search-wrap {
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wa-ex-search-wrap input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #eef0f4;
+  font-size: 14px;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.wa-ex-search-wrap input::placeholder { color: #3a3f52; }
+.wa-ex-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  border-bottom: 1px solid #2e3244;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.wa-ex-list-item:hover .wa-ex-list-name { color: #d4f53c; }
+.wa-ex-list-name { font-size: 14px; font-weight: 700; color: #eef0f4; }
+.wa-ex-list-meta { font-size: 11px; color: #b0b8c8; margin-left: auto; margin-right: 8px; }
+.wa-ex-list-chev { font-size: 11px; color: #3a3f52; }
+
+/* 種目履歴詳細 */
+.wa-back-to {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #b0b8c8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: color 0.15s;
+}
+.wa-back-to:hover { color: #d4f53c; }
+.wa-ex-hist-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: #d4f53c;
+  margin-bottom: 12px;
+}
+.wa-ex-hist-item { border: 1px solid #2e3244; border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+.wa-ex-hist-item.expanded { border-color: rgba(212,245,60,0.3); }
+.wa-ex-hist-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  background: #1c1f2a;
+  transition: background 0.15s;
+}
+.wa-ex-hist-header:hover { background: #1e2230; }
+.wa-ex-hist-date { font-size: 13px; font-weight: 700; color: #eef0f4; flex-shrink: 0; white-space: nowrap; }
+.wa-ex-hist-sets { font-size: 12px; color: #b0b8c8; flex: 1; }
+.wa-ex-hist-chev { font-size: 10px; color: #b0b8c8; transition: transform 0.2s; }
+.wa-ex-hist-item.expanded .wa-ex-hist-chev { transform: rotate(180deg); }
+.wa-ex-hist-body { display: none; background: #161920; padding: 10px 14px 12px; }
+.wa-ex-hist-item.expanded .wa-ex-hist-body { display: block; }
+.wa-ex-hist-detail { font-size: 12px; color: #b0b8c8; margin-bottom: 4px; }
+.wa-ex-hist-injury { font-size: 11px; color: #ff9f40; margin-bottom: 4px; white-space: pre-wrap; }
+.wa-ex-hist-memo { font-size: 11px; color: #9ba3b5; white-space: pre-wrap; }
+.wa-hist-days-since { font-size: 11px; color: #b0b8c8; margin-bottom: 4px; }
+.wa-hist-interval { font-size: 11px; color: #b0b8c8; margin-bottom: 6px; }
+.wa-hist-elapsed { font-size: 11px; color: #b0b8c8; }
+.wa-hist-set-line { font-size: 12px; color: #c8d0dc; margin-bottom: 2px; }
+.wa-set-line-memo { color: #9ba3b5; white-space: pre-wrap; }
+.memo-hl { background: rgba(255, 214, 0, 0.18); color: #ffd600; border-radius: 2px; padding: 0 2px; }
+.wa-ex-row .wa-hist-set-line { font-size: 12px; }
+
+/* もっと見るボタン */
+.wa-more-btn {
+  background: none;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  color: #b0b8c8;
+  font-size: 13px;
+  font-family: 'Noto Sans JP', sans-serif;
+  padding: 8px 24px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.wa-more-btn:hover { border-color: #d4f53c; color: #d4f53c; }
+
+/* =====================
+   分析タブ
+===================== */
+.analysis-ex-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: #d4f53c;
+  margin-bottom: 12px;
+}
+.analysis-stats-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.analysis-stat-card {
+  flex: 1;
+  min-width: calc(50% - 4px);
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.analysis-stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: #eef0f4;
+  line-height: 1;
+}
+.analysis-stat-num em {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 10px;
+  color: #b0b8c8;
+  font-style: normal;
+  margin-left: 2px;
+}
+.analysis-stat-label { font-size: 10px; color: #b0b8c8; margin-top: 4px; }
+.analysis-chart-wrap { margin-bottom: 20px; }
+.analysis-chart-label { font-size: 11px; color: #b0b8c8; letter-spacing: 1px; margin-bottom: 8px; }
+
+/* =====================
+   設定タブ
+===================== */
+.wa-setting-section { margin-bottom: 20px; }
+.wa-setting-card {
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.wa-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-bottom: 1px solid #2e3244;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.wa-setting-row:last-child { border-bottom: none; }
+.wa-setting-row:hover { background: #1e2230; }
+.wa-setting-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
+.wa-setting-name { font-size: 14px; font-weight: 700; color: #eef0f4; flex: 1; }
+.wa-setting-meta { font-size: 11px; color: #b0b8c8; }
+.wa-setting-chevron { font-size: 11px; color: #3a3f52; }
+.wa-setting-drag { font-size: 14px; color: #3a3f52; width: 24px; text-align: center; flex-shrink: 0; cursor: grab; }
+
+.wa-add-row-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  background: none;
+  border: none;
+  border-top: 1px solid #2e3244;
+  color: #b0b8c8;
+  font-size: 13px;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: color 0.15s;
+  border-radius: 0;
+}
+.wa-add-row-btn:hover { color: #d4f53c; }
+
+.wa-delete-btn {
+  width: 100%;
+  padding: 13px;
+  margin-top: 12px;
+  background: none;
+  border: 1px solid #ff4d3a;
+  border-radius: 12px;
+  color: #ff4d3a;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.wa-delete-btn:hover { background: rgba(255,77,58,0.08); }
+
+/* =====================
+   モーダル
+===================== */
+.wa-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.wa-modal-overlay.open { display: flex; }
+#modal-confirm { z-index: 210; }
+.wa-modal {
+  background: #1c1f2a;
+  border: 1px solid #2e3244;
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 430px;
+  padding: 20px 20px calc(32px + env(safe-area-inset-bottom));
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.wa-modal-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: #d4f53c;
+  margin-bottom: 16px;
+}
+.wa-modal-label {
+  font-size: 10px;
+  color: #b0b8c8;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.wa-modal-input {
+  width: 100%;
+  background: #111318;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #eef0f4;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 14px;
+}
+.wa-modal-input:focus { border-color: #d4f53c; }
+.wa-toggle-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.wa-toggle-btn {
+  flex: 1;
+  padding: 9px;
+  background: #111318;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  color: #b0b8c8;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.wa-toggle-btn.active {
+  background: rgba(212,245,60,0.1);
+  border-color: rgba(212,245,60,0.5);
+  color: #d4f53c;
+}
+.wa-modal-btn-row { display: flex; gap: 8px; margin-top: 4px; }
+.wa-modal-cancel {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: 1px solid #2e3244;
+  border-radius: 10px;
+  color: #b0b8c8;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+}
+.wa-modal-save {
+  flex: 2;
+  padding: 12px;
+  background: #d4f53c;
+  border: none;
+  border-radius: 10px;
+  color: #111318;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+}
+.wa-modal-delete {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background: none;
+  border: 1px solid #ff4d3a;
+  border-radius: 10px;
+  color: #ff4d3a;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+}
+
+/* モーダル内の種目リスト */
+.modal-ex-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 4px;
+  border-bottom: 1px solid #2e3244;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: #eef0f4;
+  transition: color 0.15s;
+}
+.modal-ex-row:hover { color: #d4f53c; }
+.modal-ex-row span { font-size: 11px; color: #3a3f52; }
+
+/* =====================
+   Toast通知
+===================== */
+.toast {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2e3244;
+  color: #eef0f4;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 300;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* =====================
+   ローディング
+===================== */
+.loading-msg {
+  text-align: center;
+  color: #b0b8c8;
+  font-size: 13px;
+  padding: 32px 16px;
+}
+
+/* =====================
+   サイドバー（モバイルは非表示）
+===================== */
+#sidebar-nav { display: none; }
+.sidebar-logo { display: none; }
+
+/* =====================
+   記録3画面: 2カラムレイアウト
+===================== */
+.s3-content-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* SP: 履歴パネルは折りたたみ */
+.s3-hist-panel {
+  flex-shrink: 0;
+  border-top: 1px solid #2e3244;
+  background: #111318;
+}
+.s3-hist-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 17px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.s3-hist-toggle-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #b0b8c8;
+}
+.s3-hist-chev {
+  font-size: 10px;
+  color: #b0b8c8;
+  transition: transform 0.2s;
+}
+.s3-hist-panel.open .s3-hist-chev { transform: rotate(180deg); }
+.s3-hist-panel-body {
+  display: none;
+  overflow-y: auto;
+  max-height: 38vh;
+  padding: 4px 16px 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.s3-hist-panel.open .s3-hist-panel-body { display: block; }
+.s3-hist-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 10px;
+  border-bottom: 1px solid #2e3244;
+  margin-bottom: 10px;
+}
+.s3-hist-stats {
+  font-size: 11px;
+  color: #b0b8c8;
+}
+.wa-expand-all-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.wa-expand-all-btn {
+  background: none;
+  border: none;
+  color: #b0b8c8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.wa-expand-all-btn:hover { color: #eef0f4; }
+
+/* =====================
+   s3 右エリア・怪我パネル（SP）
+===================== */
+.s3-right-area { display: flex; flex-direction: column; flex-shrink: 0; }
+.s3-right-tabs { display: none; }
+.s3-injury-panel {
+  flex-shrink: 0;
+  border-top: 1px solid #2e3244;
+  background: #111318;
+}
+.s3-injury-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 17px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.s3-injury-chev { color: #b0b8c8; font-size: 10px; transition: transform 0.2s; }
+.s3-injury-panel.open .s3-injury-chev { transform: rotate(180deg); }
+.s3-injury-panel-body {
+  display: none;
+  overflow-y: auto;
+  max-height: 38vh;
+  padding: 4px 16px 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.s3-injury-panel.open .s3-injury-panel-body { display: block; }
+.s3-injury-subtabs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 0 10px;
+  border-bottom: 1px solid #2e3244;
+  margin-bottom: 8px;
+}
+.s3-injury-subtab {
+  background: none;
+  border: 1px solid #2e3244;
+  border-radius: 4px;
+  color: #b0b8c8;
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.s3-injury-subtab.active {
+  background: #d4f53c;
+  border-color: #d4f53c;
+  color: #111318;
+  font-weight: 700;
+}
+
+/* =====================
+   デスクトップ レイアウト
+===================== */
+@media (min-width: 640px) {
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  #app {
+    flex-direction: row;
+    max-width: 1360px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* サイドバー */
+  #sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    flex-shrink: 0;
+    height: 100%;
+    background: #111318;
+    border-right: 1px solid #2e3244;
+  }
+
+  .sidebar-logo {
+    display: block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 21px;
+    letter-spacing: 3px;
+    color: #d4f53c;
+    line-height: 1.2;
+    padding: 24px 20px 22px;
+    border-bottom: 1px solid #2e3244;
+    margin-bottom: 8px;
+  }
+
+  #sidebar-nav .wa-nav-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 14px 20px;
+    gap: 12px;
+    width: 100%;
+    border-left: 3px solid transparent;
+    border-radius: 0;
+  }
+
+  #sidebar-nav .wa-nav-item.active {
+    border-left-color: #d4f53c;
+    background: rgba(212,245,60,0.06);
+  }
+
+  #sidebar-nav .wa-nav-icon {
+    font-size: 20px;
+    opacity: 0.45;
+  }
+
+  #sidebar-nav .wa-nav-item.active .wa-nav-icon { opacity: 1; }
+
+  #sidebar-nav .wa-nav-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #b0b8c8;
+    letter-spacing: 0;
+  }
+
+  #sidebar-nav .wa-nav-item.active .wa-nav-label { color: #d4f53c; }
+
+  .sidebar-sheet-link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    margin-top: auto;
+    text-decoration: none;
+    border-top: 1px solid #2e3244;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .sidebar-sheet-link:hover { opacity: 1; }
+  .sidebar-sheet-link .wa-nav-icon { font-size: 20px; opacity: 1; }
+  .sidebar-sheet-link .wa-nav-label { font-size: 14px; font-weight: 500; color: #b0b8c8; }
+
+  /* コンテンツエリア */
+  #content {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+  }
+
+  /* ボトムナビを非表示 */
+  .wa-bottom-nav { display: none; }
+
+  /* モーダルの幅をコンテンツ幅に合わせる */
+  .wa-modal { max-width: 880px; }
+
+  /* Toastはビューポート下部固定 */
+  .toast { bottom: 20px; }
+
+  /* ヘッダー */
+  .wa-header { padding: 20px 28px 16px 16px; }
+  .wa-app-title { font-size: 34px; }
+  .wa-header-title { font-size: 28px; }
+
+  /* 記録タブのタイトルをサイドバーと重複しないよう差し替え */
+  #s1 .wa-app-title { font-size: 0; }
+  #s1 .wa-app-title::before {
+    content: 'RECORD';
+    font-size: 34px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 3px;
+    color: #d4f53c;
+  }
+  .wa-header-sub { font-size: 13px; }
+  .wa-date { font-size: 14px; }
+
+  /* ボディパディング */
+  .wa-body { padding: 24px 24px 12px; }
+  .wa-fixed-btn-wrap { padding: 14px 24px; }
+
+  /* 記録3: 2カラム */
+  .s3-content-wrap { flex-direction: row; }
+  .s3-main-col { flex: 0 0 550px; border-right: 1px solid #2e3244; padding: 20px 20px 12px; }
+  .s3-hist-panel {
+    flex: 1;
+    border-top: none;
+    border-left: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .s3-hist-toggle { display: none; }
+  .s3-hist-chev { display: none; }
+  .s3-hist-panel-body {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    max-height: none;
+    padding: 0 20px 12px 40px;
+  }
+  .s3-hist-stats { font-size: 12px; }
+  /* 種目履歴・怪我ペインの見出し行を同じ高さに揃える（タブ切替時のズレ防止） */
+  .s3-hist-stats-row { min-height: 46px; }
+  /* s3 右エリア・怪我パネル（PC narrow） */
+  .s3-right-area {
+    flex: 1;
+    flex-shrink: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+  .s3-right-tabs {
+    display: flex;
+    flex-shrink: 0;
+    border-bottom: 1px solid #2e3244;
+  }
+  .s3-right-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px;
+    color: #b0b8c8;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .s3-right-tab.active { color: #d4f53c; border-bottom-color: #d4f53c; }
+  .s3-hist-panel.pc-hidden { display: none; }
+  .s3-injury-panel {
+    display: none;
+    flex: 1;
+    border-top: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .s3-injury-panel.pc-active { display: flex; }
+  .s3-injury-toggle { display: none; }
+  .s3-injury-panel-body {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    max-height: none;
+    padding: 0 20px 12px 40px;
+  }
+  /* セクションラベル */
+  .wa-section-label { font-size: 12px; }
+
+  /* メニューアイテム */
+  .wa-menu-item { padding: 18px 20px; }
+  .wa-menu-name { font-size: 18px; }
+  .wa-menu-meta { font-size: 13px; }
+
+  /* 統計テーブル */
+  .wa-stats-table { margin: 16px 0 0; }
+  .wa-stats-table--header { margin: 12px 0 16px; }
+  .wa-stats-th { font-size: 12px; padding: 7px 0; }
+  .wa-stats-td { font-size: 28px; }
+  .wa-stats-td em { font-size: 12px; }
+  .wa-stats-row-label { font-size: 13px; }
+
+  /* 種目リスト */
+  .wa-ex-item { padding: 14px 18px; }
+  .wa-ex-name { font-size: 17px; }
+  .wa-ex-prev { font-size: 13px; }
+
+  /* 履歴セッション */
+  .wa-session-header { padding: 15px 18px; }
+  .wa-session-date { font-size: 15px; }
+  .wa-session-menu { font-size: 15px; }
+  .wa-session-dur { font-size: 13px; }
+  .wa-session-cond { font-size: 13px; }
+  .wa-session-feeling { font-size: 13px; }
+  .wa-ex-row-name { font-size: 15px; }
+  .wa-ex-row-main { font-size: 15px; }
+  .wa-ex-row-warm { font-size: 13px; }
+
+  /* 種目軸リスト */
+  .wa-ex-list-name { font-size: 16px; }
+  .wa-ex-list-meta { font-size: 13px; }
+  .wa-ex-list-item { padding: 14px 6px; }
+
+  /* 設定 */
+  .wa-setting-row { padding: 16px 18px; }
+  .wa-setting-name { font-size: 16px; }
+  .wa-setting-meta { font-size: 13px; }
+
+  /* サブタブ */
+  .wa-subtab { font-size: 15px; padding: 10px; }
+
+  /* ボタン */
+  .wa-save-btn { font-size: 17px; padding: 16px; }
+  .wa-action-btn { font-size: 16px; padding: 16px; }
+  .wa-set-menu-btn { font-size: 18px; }
+
+  /* 前回のメモ */
+  .wa-prev-label { font-size: 12px; }
+  .wa-prev-memo { font-size: 15px; }
+  .wa-prev-sets { font-size: 15px; }
+  .wa-prev-stats { font-size: 13px; }
+
+  /* セット行 */
+  .wa-set-row { gap: 12px; }
+  #s3-body .wa-set-row { padding: 12px 16px; margin-bottom: 10px; }
+  .wa-set-num { font-size: 28px; padding-top: 9px; }
+  .wa-set-main-row { gap: 10px; }
+  .wa-set-input { font-size: 30px; width: 82px; padding: 10px 6px; }
+  .wa-set-unit { font-size: 14px; width: 20px; }
+  .wa-set-cross { font-size: 18px; }
+  .wa-record-btn { flex: none; width: 120px; font-size: 16px; padding: 12px 8px; }
+  .wa-record-btn.started { font-size: 24px; }
+  .wa-side-section-label { font-size: 15px; margin: 14px 0 8px; }
+  .wa-add-btn { font-size: 14px; }
+  .wa-interval-input { font-size: 22px; width: 62px; }
+  .wa-set-injury-toggle { font-size: 13px; }
+}
+
+.wa-ex-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wa-ex-row-edit {
+  background: transparent;
+  border: 1px solid #2e3244;
+  border-radius: 6px;
+  color: #b0b8c8;
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  flex-shrink: 0;
+}
+
+.wa-rec-del-btn {
+  background: transparent;
+  border: none;
+  color: #ff4d3a;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.wa-session-edit-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid #2e3244;
+  border-radius: 8px;
+  color: #b0b8c8;
+  font-size: 12px;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* ===== 怪我タブ ===== */
+.injury-view { display: none; }
+.injury-view.active { display: block; }
+
+.injury-site-group {
+  margin-bottom: 16px;
+}
+.injury-rec-rows {
+  border-left: 3px solid rgba(212, 245, 60, 0.25);
+  padding-left: 10px;
+}
+.injury-site-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d4f53c;
+  margin-bottom: 4px;
+}
+
+.injury-rec-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: #b0b8c8;
+}
+.injury-rec-date { color: #b0b8c8; flex-shrink: 0; }
+.injury-rec-ex   { color: #fff; font-weight: 500; }
+.injury-rec-set  { color: #b0b8c8; flex-shrink: 0; }
+.injury-rec-level { color: #ff9f40; flex-shrink: 0; }
+.injury-rec-memo  { width: 100%; color: #b0b8c8; font-size: 12px; padding-left: 2px; }
+
+.injury-site-card { border: 1px solid #2e3244; border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+.injury-site-card.expanded { border-color: rgba(212,245,60,0.3); }
+.injury-site-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: #1c1f2a;
+  transition: background 0.15s;
+}
+.injury-site-card-header:hover { background: #1e2230; }
+.injury-site-card-name { flex: 1; font-size: 15px; color: #fff; font-weight: 500; }
+.injury-site-card-meta { font-size: 12px; color: #b0b8c8; flex-shrink: 0; }
+.injury-site-card-chev { color: #b0b8c8; font-size: 10px; transition: transform 0.2s; }
+.injury-site-card.expanded .injury-site-card-chev { transform: rotate(180deg); }
+.injury-site-card-body { display: none; padding: 4px 14px 12px; background: #161920; }
+.injury-site-card.expanded .injury-site-card-body { display: block; }
+
+/* s3怪我ペイン：種目履歴カードに合わせてサイズ統一 */
+#s3-injury-panel .wa-session-header { padding: 12px 14px; }
+#s3-injury-panel .wa-session-date { font-size: 13px; }
+#s3-injury-panel .injury-site-card-header { padding: 12px 14px; }
+#s3-injury-panel .injury-site-card-name { font-size: 13px; font-weight: 700; }
+#s3-injury-panel .injury-site-card-body { padding: 10px 14px 12px; }
+
+/* =====================
+   PC 広い画面: 3カラム
+===================== */
+@media (min-width: 1600px) {
+  #app { max-width: 1900px; }
+  .s3-right-area { flex-direction: row; }
+  .s3-right-tabs { display: none; }
+  .s3-hist-panel { border-right: 1px solid #2e3244; }
+  .s3-hist-panel.pc-hidden { display: flex !important; }
+  .s3-injury-panel { display: flex !important; flex: 1; }
+}
+
