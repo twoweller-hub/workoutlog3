@@ -119,3 +119,52 @@ migration-plan.md に Phase 1（Supabase セットアップ）の詳細手順を
 
 - Supabase Auth の動作確認（新規登録・ログイン・自動ログイン）
 - `gasGet` / `gasPost` を Supabase クエリに置き換え（app.js の API 置き換え）
+
+---
+
+## 2026-06-28 — Phase 1〜2 実施時の躓きポイント（記録）
+
+次回以降の参考のため、ユーザーが実際に詰まった箇所をまとめる。
+
+### Phase 1 の躓き
+
+**① SQL 実行時に ` ```sql ` ごとコピーしてエラー**
+- 現象: `syntax error at or near "` ``` `"`
+- 原因: CLAUDE.md のコードブロック記号（` ```sql ` / ` ``` `）まで含めてコピーした
+- 対策: SQL 文だけを選択してコピーするよう明示すること
+
+**② Supabase の API キーページが分かりにくい**
+- Data API ページを開いてしまい、Project API keys が見つからなかった
+- 現在の Supabase UI では Settings → **API Keys** ページに移動する必要がある
+- さらに API キーの形式が旧来の `eyJ...`（JWT）から `sb_publishable_...` に変わっていた
+- `sb_publishable_` キーが Supabase JS SDK v2 の anon key 相当
+
+**③ Supabase プロジェクト作成時のオプション説明が不足していた**
+- 「GitHub に接続」「自動 RLS を有効にする」「データ API を有効にする」など複数の選択肢に戸惑った
+- GitHub 接続は不要（スキップ）、他はデフォルトのままで OK
+
+### GitHub リポジトリ・Pages の躓き
+
+**④ Public / Private の選択で迷った**
+- workoutlog2 での経験から「GitHub Pages は Public でないと動かない」という記憶があったが確信が持てなかった
+- 正解: 無料アカウントでは GitHub Pages は **Public リポジトリのみ** 使用可能
+- anon キーを公開してもRLSがあるので問題なし
+
+**⑤ 「Initialize this repository with a README」のチェックボックスが見つからなかった**
+- 現在の GitHub UI では「Add README」というトグル（スイッチ）になっており、デフォルトで Off になっている
+- チェックボックスではなくトグルなので見た目が変わっていた
+
+**⑥ `git remote add` がサンドボックス制限でここから実行できなかった**
+- Claude のサンドボックスが `.git/config` への書き込みを禁止している
+- 対策: VS Code の「Publish Branch」機能を使うとリモート登録とプッシュを一括でできる
+
+### Phase 2（認証）の躓き
+
+**⑦ 確認メールのリンクが `localhost:3000` に飛んだ**
+- 原因: Supabase の Site URL がデフォルトの `localhost:3000` のままだった
+- 対策: Authentication → URL Configuration → Site URL を `https://twoweller-hub.github.io/workoutlog3/` に変更し、Redirect URLs にも同 URL を追加する
+- **次回新規プロジェクト作成時は Phase 1 の手順に「Site URL の設定」を追加すること**
+
+**⑧ メール未確認でもログインできてしまった**
+- Supabase のデフォルト設定ではメール未確認でもサインインが通る場合がある
+- 個人アプリなので実害なし。ログイン認証（パスワード）自体は正常に機能している
