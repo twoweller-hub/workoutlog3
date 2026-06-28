@@ -245,16 +245,89 @@ GASより遅くなる可能性がある。
 
 ## 実装推奨手順
 
-### Phase 1: Supabase セットアップ
-1. Supabase プロジェクト作成
-2. CLAUDE.md の SQL を実行（テーブル作成）
-3. 上記インデックスを追加
-4. RLS 動作確認
+---
+
+### Phase 1: Supabase セットアップ（詳細手順）
+
+Supabase は初めて使うため、画面操作を含めて丁寧に記載する。
+
+#### 1-1. アカウント作成
+
+1. ブラウザで https://supabase.com を開く
+2. 「Start your project」または「Sign Up」をクリック
+3. GitHub アカウントでログインするのが最も簡単（「Continue with GitHub」を選択）
+4. GitHub の認証画面が出たら許可する
+
+#### 1-2. 新規プロジェクト作成
+
+1. ログイン後、ダッシュボードが表示される
+2. 「New project」ボタンをクリック
+3. 以下を入力する：
+   - **Name**（プロジェクト名）: `workoutlog3`
+   - **Database Password**: 強いパスワードを設定（後で使わないが必須）。「Generate a password」ボタンで自動生成でよい
+   - **Region**: `Northeast Asia (Tokyo)` を選択（日本から最も近い）
+4. 「Create new project」をクリック
+5. **2〜3分待つ**（データベースが起動するまでの時間）。画面に「Setting up your project...」と表示される
+
+#### 1-3. テーブル作成（SQL 実行）
+
+プロジェクトの準備ができたら、データベースにテーブルを作る。
+
+1. 左のメニューから「**SQL Editor**」をクリック
+2. 画面中央の入力欄に SQL を貼り付けて実行する
+3. まず CLAUDE.md の「プロジェクト作成後に実行するSQL」をすべてコピーして貼り付け → 「**RUN**」ボタンをクリック
+4. 「Success. No rows returned」と表示されれば成功
+5. 次に以下のインデックス用 SQL を同様に実行する：
+
+```sql
+CREATE INDEX ON records(user_id, exercise);
+CREATE INDEX ON records(user_id, session_id);
+CREATE INDEX ON records(user_id, date);
+CREATE INDEX ON sessions(user_id, date DESC);
+CREATE INDEX ON sessions(user_id, session_id);
+CREATE INDEX ON menu_exercises(user_id, menu_id);
+```
+
+#### 1-4. テーブルが作成されたか確認
+
+1. 左メニューの「**Table Editor**」をクリック
+2. 左側に `exercises`, `menus`, `menu_exercises`, `sessions`, `records`, `injury_sites` の6テーブルが表示されていれば OK
+
+#### 1-5. API キーを取得する（最重要）
+
+app.js から Supabase に接続するために必要な2つの値を取得する。
+
+1. 左メニュー最下部の「**Project Settings**」（歯車アイコン）をクリック
+2. 「**API**」をクリック
+3. 以下の2つをメモ（またはコピー）しておく：
+   - **Project URL**: `https://xxxxxxxxxx.supabase.co` という形式
+   - **Project API keys** の中の **anon / public** のキー（長い文字列）
+
+> ⚠️ `anon` キーはフロントエンドに埋め込むが、RLS（行レベルセキュリティ）が有効なので他人のデータは見えない。`service_role` キーは**絶対に**フロントエンドに書かない。
+
+取得した2つの値は、のちに app.js の以下の箇所に設定する：
+
+```javascript
+const SUPABASE_URL  = 'https://xxxxxxxxxx.supabase.co';  // Project URL
+const SUPABASE_ANON_KEY = 'eyJ...（長い文字列）';         // anon キー
+```
+
+#### 1-6. RLS の動作確認（任意だが推奨）
+
+テーブルに RLS（Row Level Security）が有効になっているか確認する。
+
+1. 「**Table Editor**」→ `exercises` テーブルをクリック
+2. 右上に「RLS enabled」と表示されていれば OK
+3. 全6テーブルで同様に確認する
+
+---
 
 ### Phase 2: 認証
 1. ログイン画面を index.html に追加
 2. Supabase Auth でサインイン処理
 3. 以降のすべての DB 操作は `auth.uid()` を前提に
+
+---
 
 ### Phase 3: API 置き換え（app.js）
 1. `gasGet` / `gasPost` を削除し、Supabase クライアント初期化に差し替え
@@ -264,13 +337,19 @@ GASより遅くなる可能性がある。
 5. `updateSession` / `deleteSession` を session_id ベースに修正（⚠️要注意2）
 6. 残りのアクションを順次置き換え
 
+---
+
 ### Phase 4: データ移行
 1. Google Sheets から CSV エクスポート
 2. session_id 補完スクリプト実行（⚠️要注意1）
 3. Supabase へインポート（sessions → records の順）
 4. データ整合性確認
 
+---
+
 ### Phase 5: 本番切り替え
 1. GitHub Pages へのデプロイ確認
 2. PWA インストール確認
 3. workoutlog2 からの切り替え
+
+完了後、「dev-log.md だけ読むように戻して」と Claude に依頼して CLAUDE.md を更新してもらうこと。
