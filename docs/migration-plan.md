@@ -1262,3 +1262,53 @@ await sb.from('injury_sites').delete().eq('user_id', _userId).eq('name', S.editi
 - [ ] 12. 設定系 CRUD（種目）
 - [ ] 13. 設定系 CRUD（メニュー）
 - [ ] 14. 設定系 CRUD（怪我部位）
+
+---
+
+## セッション分割方針（2026-06-28 決定）
+
+### 背景
+
+CLAUDE.md の指示で dev-log.md と migration-plan.md を読んでから作業を開始するが、
+この2ファイルを読むだけでコンテキストが約 44% 埋まってしまう（migration-plan.md が 1265 行と大きいため）。
+その状態から app.js（2455行）の広範な書き換えをすると、1セッションでコンテキストが枯渇するリスクがある。
+そのため Phase 3 を以下の3セッションに分割して進める。
+
+### Phase 3-A：コア記録フロー（ステップ 1〜4）
+
+**「記録する」主要機能が動くようになることがゴール。**
+
+- ステップ 1: `GAS_URL` 削除、`gasGet` / `gasPost` / `gasGetWithRetry` 削除、`_userId` 追加、変換関数（`toExercise` / `toSession` / `toRecord`）追加、全 `sb〜` 関数を API セクションに追加
+- ステップ 2: `init()` の `gasGet` → `sbGetInitialData()`、バックグラウンド再取得も置き換え
+- ステップ 3: `completeEx()` を `async` 化、saveSets → Supabase INSERT、インターバル更新 → Supabase UPDATE
+- ステップ 4: `saveSession()` の `gasPost` → Supabase INSERT + エラー処理
+- `onAuthStateChange` に `_userId = session.user.id` を追加
+- `enterEx()` の `gasGet` → `sbGetExerciseData()`
+- キャッシュバスター更新（index.html / sw.js）＋コミット
+
+### Phase 3-B：履歴・怪我・分析タブ（ステップ 5〜11）
+
+- ステップ 5: `loadHistoryDate()` → `sbGetHistory()`、`saveSessionModal()` / `deleteSessionConfirm()` を session_id ベースに変更
+- ステップ 6: （enterEx() は Phase 3-A で対応済み）
+- ステップ 7: `loadHistExList()` / `loadAnalysisExList()` → `sbGetExercisesWithLastDate()`
+- ステップ 8: `loadHistExDetail()` / `loadS3Hist()` → `sbGetExerciseHistory()`
+- ステップ 9: `loadInjuryHistory()` / `loadS3Injury()` → `sbGetInjuryHistory()`
+- ステップ 10: `loadAnalysis()` → `sbGetAnalysisData()`
+- ステップ 11: `saveRecordModal()` / `deleteExerciseRecordsConfirm()` → `sbUpdateExerciseRecords()`
+- キャッシュバスター更新＋コミット
+
+### Phase 3-C：設定 CRUD（ステップ 12〜14）
+
+- ステップ 12: `saveExModal()` / `deleteExModal()` → exercises テーブル CRUD
+- ステップ 13: `addMenuModal()` / `deleteMenuConfirm()` / `saveMenuOrder()` / `removeMenuEx()` / `openMenuExAdd()` → menus + menu_exercises CRUD
+- ステップ 14: `saveInjuryModal()` / `deleteInjuryModal()` → injury_sites CRUD
+- キャッシュバスター更新＋コミット
+
+### 次のセッションへの引き継ぎ
+
+各セッション開始時の指示例：
+- 「Phase 3-A を進めて」
+- 「Phase 3-B を進めて」
+- 「Phase 3-C を進めて」
+
+チェックリストの完了項目は `[x]` に更新してコミットすること。
