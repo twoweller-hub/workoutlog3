@@ -189,3 +189,33 @@ GAS ソース（`workoutlog2/gas/api.gs`）と `app.js` を全文確認した上
 - 推奨実装順序（14ステップ）とチェックリスト
 
 **コード変更なし。次のセッションから実装開始できる状態。**
+
+---
+
+## 2026-06-28 — Phase 3 をセッション分割・実装ファイル分割
+
+### 背景
+
+dev-log.md + migration-plan.md（1265行）の読込だけでコンテキストが約 44% 埋まり、
+そこから app.js（2455行）の書き換えをすると 80% を超えてレスポンス劣化が起きることが判明。
+
+### 作業内容
+
+**migration-plan.md の軽量化（1265行 → 348行）:**
+- Phase 3 実装コード（約 900行）を 3 ファイルに分割して切り出した
+- 要注意ポイント・API対応表・フェーズ手順の概要のみ migration-plan.md に残した
+
+**新規作成ファイル:**
+- `docs/phase3a-impl.md` — コア記録フロー（GAS削除・_userId・getInitialData・saveSets・saveSession）
+- `docs/phase3b-impl.md` — 履歴・怪我・分析タブ（getHistory〜updateExerciseRecords）
+- `docs/phase3c-impl.md` — 設定系 CRUD（種目・メニュー・怪我部位）
+
+**CLAUDE.md 更新:**
+- セッション開始時の必須読込に Phase 3 セッション別の指示を追記
+- 「Phase 3-A を進めて」等の指示で該当 impl ファイルだけ読む運用に変更
+
+**想定コンテキスト削減効果:**
+- 旧: dev-log.md + migration-plan.md で約 44% → 残り 56% で作業
+- 新: dev-log.md + migration-plan.md + phase3x-impl.md で約 20〜25% → 残り 75〜80% で作業
+
+**コード変更なし。次のセッションで「Phase 3-A を進めて」と指示すれば実装開始できる。**
