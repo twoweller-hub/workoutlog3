@@ -9,6 +9,21 @@ workoutlog2（GAS + Sheets）→ workoutlog3（Supabase + PostgreSQL）移行の
 
 ## 要注意ポイント 5つ（実装前に必ず確認）
 
+### ⚠️ 0. `records.session_id` の FK 制約を削除済み（対応済み）
+
+`records.session_id` は当初 `sessions(session_id)` への FK を持っていたが、
+`completeEx()` がセッション保存より先に records を INSERT する設計のため FK 違反が発生した。
+
+以下のSQL で FK 制約を削除済み：
+```sql
+ALTER TABLE records DROP CONSTRAINT records_session_id_fkey;
+```
+
+session_id の値は引き続き保存される。deleteSession 実装時は CASCADE が効かないため、
+records を先に手動削除してから sessions を削除する（Phase 3-B で対応）。
+
+---
+
 ### ⚠️ 1. `session_id` NOT NULL制約 vs 旧データ
 
 `records` テーブルの `session_id` は `NOT NULL` かつ `sessions(session_id)` への FK。
